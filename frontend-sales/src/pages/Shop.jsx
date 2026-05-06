@@ -160,14 +160,26 @@ function Shop() {
         if (data.snap_token) {
           window.snap.pay(data.snap_token, {
             onSuccess: function(result) {
-              alert(`TRANSAKSI BERHASIL!\nNomor Pesanan: ${data.order_id}`);
-              // Kosongkan keranjang setelah sukses dibayar
-              setCart([]);
-              setIsCartOpen(false);
-              setShippingCost(0);
-              setSelectedCourier('');
-              setSelectedCity('');
-              setSelectedProvince('');
+              // Kirim request ke backend untuk update status jadi 'paid'
+              fetch('http://127.0.0.1:8000/api/checkout/success', {
+                method: 'POST',
+                headers: { 
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/json'
+                },
+                body: JSON.stringify({ order_id: data.order_id })
+              }).then(() => {
+                alert(`TRANSAKSI BERHASIL!\nNomor Pesanan: ${data.order_id}`);
+                // Kosongkan keranjang setelah sukses dibayar
+                setCart([]);
+                setIsCartOpen(false);
+                setShippingCost(0);
+                setSelectedCourier('');
+                setSelectedCity('');
+                setSelectedProvince('');
+              }).catch(err => {
+                alert("Pembayaran berhasil, tapi gagal update status di server.");
+              });
             },
             onPending: function(result) {
               alert("Menunggu pembayaran Anda!");

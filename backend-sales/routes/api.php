@@ -16,3 +16,4 @@ Route::get('/rajaongkir/provinces', [RajaOngkirController::class, 'getProvinces'
 Route::get('/rajaongkir/cities/{provinceId}', [RajaOngkirController::class, 'getCities']);
 Route::post('/rajaongkir/cost', [RajaOngkirController::class, 'checkCost']);
 Route::post('/checkout', [CheckoutController::class, 'process']);
+Route::post('/checkout/success', [CheckoutController::class, 'success']);
