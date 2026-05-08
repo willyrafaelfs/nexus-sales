@@ -3,40 +3,74 @@
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ApiController;
 use App\Http\Controllers\RajaOngkirController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ShopController;
+use App\Http\Controllers\OrderController;
 
-Route::get('/products', [ApiController::class, 'getProducts']);
-Route::post('/checkout', [ApiController::class, 'checkout']);
-Route::get('/orders', [ApiController::class, 'getOrders']);
+// 1. Jalur Publik (Tanpa Login)
+Route::get('/products', [ProductController::class, 'index']); // <-- Sekarang mengarah ke ProductController
+
+// 2. Auth & SSO Google
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/auth/google', [AuthController::class, 'redirectToGoogle']);
 Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
+
+// 3. RajaOngkir & Midtrans (Checkout Resmi)
 Route::get('/rajaongkir/provinces', [RajaOngkirController::class, 'getProvinces']);
 Route::get('/rajaongkir/cities/{provinceId}', [RajaOngkirController::class, 'getCities']);
 Route::post('/rajaongkir/cost', [RajaOngkirController::class, 'checkCost']);
-Route::post('/checkout', [CheckoutController::class, 'process']);
+Route::post('/checkout', [CheckoutController::class, 'process']); // <-- Hanya ini jalur checkout yang benar
 Route::post('/checkout/success', [CheckoutController::class, 'success']);
-Route::get('/test-minio', function () {
+
+// 4. Setup MinIO — Buat bucket dan set public agar gambar bisa diakses browser
+Route::get('/setup-minio', function () {
     try {
-        Storage::disk('s3')->put('halo-dosen.txt', 'Pak/Bu, ini bukti Minio Cloud Storage saya berjalan sempurna!');
-        
-        $url = Storage::disk('s3')->url('halo-dosen.txt');
-        
+        $disk = Storage::disk('s3');
+        $client = $disk->getClient();
+        $bucket = config('filesystems.disks.s3.bucket');
+
+        // Buat bucket jika belum ada
+        if (!$client->doesBucketExist($bucket)) {
+            $client->createBucket(['Bucket' => $bucket]);
+        }
+
+        // Set bucket policy ke Public Read agar browser bisa akses gambar
+        $policy = json_encode([
+            'Version' => '2012-10-17',
+            'Statement' => [[
+                'Sid' => 'PublicRead',
+                'Effect' => 'Allow',
+                'Principal' => '*',
+                'Action' => ['s3:GetObject'],
+                'Resource' => ["arn:aws:s3:::{$bucket}/*"]
+            ]]
+        ]);
+
+        $client->putBucketPolicy([
+            'Bucket' => $bucket,
+            'Policy' => $policy
+        ]);
+
+        // Test upload file kecil
+        $disk->put('halo-dosen.txt', 'Pak/Bu, ini bukti Minio Cloud Storage saya berjalan sempurna!');
+        $url = $disk->url('halo-dosen.txt');
+
         return response()->json([
             'status' => 'Sukses!',
-            'pesan' => 'File berhasil di-upload ke Minio',
+            'pesan' => "Bucket '{$bucket}' sudah dibuat dan policy di-set ke PUBLIC",
             'link_file' => $url
         ]);
     } catch (\Exception $e) {
-        return response()->json(['error' => $e->getMessage()]);
+        return response()->json(['error' => $e->getMessage()], 500);
     }
 });
+
+// 5. Jalur Terkunci (Wajib Login/Punya KTP)
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/shop', [ShopController::class, 'myShop']);
+    Route::get('/orders', [OrderController::class, 'index']);
     Route::post('/shop', [ShopController::class, 'store']);
     Route::post('/products', [ProductController::class, 'store']);
 });

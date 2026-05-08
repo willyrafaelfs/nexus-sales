@@ -21,8 +21,9 @@ function Shop() {
   useEffect(() => {
     fetch('http://localhost:8888/api/products')
       .then(res => res.json())
-      .then(data => {
-        setProducts(data);
+      .then(json => {
+        // Data sekarang ada di dalam properti 'data' dari response
+        setProducts(json.data || []);
         setIsLoading(false);
       })
       .catch(err => console.error("Gagal load produk:", err));
@@ -246,24 +247,54 @@ function Shop() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {filteredProducts.map((product) => (
-              <div key={product.id} className="group bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-cyan-500/50 transition-all duration-300 flex flex-col justify-between">
-                <div>
-                  <span className="text-xs font-semibold text-cyan-500 uppercase tracking-wider mb-2 block">
-                    {product.category}
-                  </span>
-                  <h2 className="text-lg font-bold text-gray-100 mb-2 leading-tight">
+              <div key={product.id} className="group bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-cyan-500/50 transition-all duration-300 flex flex-col justify-between shadow-lg hover:shadow-cyan-500/5">
+                {/* Gambar Produk dari MinIO */}
+                <div className="relative w-full h-48 bg-gray-800 overflow-hidden">
+                  {product.image ? (
+                    <img 
+                      src={product.image} 
+                      alt={product.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  {/* Fallback jika gambar tidak tersedia / gagal load */}
+                  <div 
+                    className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center"
+                    style={{ display: product.image ? 'none' : 'flex' }}
+                  >
+                    <svg className="w-12 h-12 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                  </div>
+                </div>
+
+                <div className="p-5 flex flex-col flex-1">
+                  {/* Nama Toko Penjual */}
+                  {product.shop && (
+                    <span className="text-xs font-semibold text-cyan-500 uppercase tracking-wider mb-1 block truncate">
+                      {product.shop.nama_toko}
+                    </span>
+                  )}
+                  <h2 className="text-lg font-bold text-gray-100 mb-1 leading-tight">
                     {product.name}
                   </h2>
-                  <p className="text-xl font-light text-gray-300 mb-6">
+                  {product.description && (
+                    <p className="text-xs text-gray-500 mb-3 line-clamp-2">{product.description}</p>
+                  )}
+                  <p className="text-xl font-light text-gray-300 mb-4 mt-auto">
                     Rp {Number(product.price).toLocaleString('id-ID')}
                   </p>
+                  <button 
+                    onClick={() => addToCart(product)} 
+                    className="w-full bg-gray-800 hover:bg-cyan-600 text-white font-medium py-2 rounded-lg border border-gray-700 hover:border-cyan-500 transition-colors"
+                  >
+                    Add to Cart
+                  </button>
                 </div>
-                <button 
-                  onClick={() => addToCart(product)} 
-                  className="w-full bg-gray-800 hover:bg-cyan-600 text-white font-medium py-2 rounded-lg border border-gray-700 hover:border-cyan-500 transition-colors"
-                >
-                  Add to Cart
-                </button>
               </div>
             ))}
           </div>
