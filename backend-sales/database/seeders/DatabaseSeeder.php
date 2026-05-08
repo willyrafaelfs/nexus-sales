@@ -26,11 +26,6 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('willy123'),
             'role' => 'customer'
         ]);
-
-        // 3. Masukkan Data Produk (Yang sudah kita buat sebelumnya)
-        Product::create(['name' => 'Quantum Core Processor', 'price' => 4500000, 'category' => 'Hardware']);
-        Product::create(['name' => 'Neural Mechanical Keyboard', 'price' => 1250000, 'category' => 'Peripherals']);
-        Product::create(['name' => 'Holographic Monitor 27"', 'price' => 5600000, 'category' => 'Display']);
-        Product::create(['name' => 'Cyber-Optic Mouse', 'price' => 750000, 'category' => 'Peripherals']);
+        
     }
 }

@@ -6,7 +6,7 @@ function Admin() {
 
   useEffect(() => {
     // Mengambil data pesanan dari API Laravel
-    fetch('http://127.0.0.1:8000/api/orders')
+    fetch('http://localhost:8888/api/orders')
       .then(res => res.json())
       .then(data => {
         setOrders(data);

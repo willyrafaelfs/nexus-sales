@@ -19,7 +19,7 @@ function Shop() {
 
   // 1. Ambil data produk saat web dibuka
   useEffect(() => {
-    fetch('http://127.0.0.1:8000/api/products')
+    fetch('http://localhost:8888/api/products')
       .then(res => res.json())
       .then(data => {
         setProducts(data);
@@ -31,7 +31,7 @@ function Shop() {
   // 2. Ambil data Provinsi jika keranjang dibuka 
   useEffect(() => {
     if (isCartOpen && provinces.length === 0) {
-      fetch('http://127.0.0.1:8000/api/rajaongkir/provinces')
+      fetch('http://localhost:8888/api/rajaongkir/provinces')
         .then(res => res.json())
         .then(data => setProvinces(data))
         .catch(err => console.error("Gagal load provinsi:", err));
@@ -45,7 +45,7 @@ function Shop() {
       setSelectedCity('');
       setShippingCost(0); 
       
-      fetch(`http://127.0.0.1:8000/api/rajaongkir/cities/${selectedProvince}`)
+      fetch(`http://localhost:8888/api/rajaongkir/cities/${selectedProvince}`)
         .then(res => res.json())
         .then(data => setCities(data))
         .catch(err => console.error("Gagal load kota:", err));
@@ -57,7 +57,7 @@ function Shop() {
     if (selectedCity && selectedCourier) {
       setIsCalculatingShipping(true);
       
-      fetch('http://127.0.0.1:8000/api/rajaongkir/cost', {
+      fetch('http://localhost:8888/api/rajaongkir/cost', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json', 
@@ -144,7 +144,7 @@ function Shop() {
 
     try {
       // 1. Minta Token ke Laravel
-      const response = await fetch('http://127.0.0.1:8000/api/checkout', {
+      const response = await fetch('http://localhost:8888/api/checkout', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json', 
@@ -161,7 +161,7 @@ function Shop() {
           window.snap.pay(data.snap_token, {
             onSuccess: function(result) {
               // Kirim request ke backend untuk update status jadi 'paid'
-              fetch('http://127.0.0.1:8000/api/checkout/success', {
+              fetch('http://localhost:8888/api/checkout/success', {
                 method: 'POST',
                 headers: { 
                   'Content-Type': 'application/json',

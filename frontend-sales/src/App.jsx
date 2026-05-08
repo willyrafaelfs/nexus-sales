@@ -3,17 +3,30 @@ import { useState } from 'react';
 import Shop from './pages/Shop';
 import Admin from './pages/Admin';
 import Login from './pages/Login';
+import SellerDashboard from './pages/seller/SellerDashboard';
 
-// --- FUNGSI GEMBOK KEAMANAN ---
-// Fungsi ini akan mengecek apakah yang masuk adalah Admin.
-// Jika bukan, dia akan ditendang kembali ke halaman Login.
+// --- GEMBOK KEAMANAN: Hanya Admin ---
+// Jika bukan admin, tendang ke Beranda (bukan login, karena mungkin sudah login sebagai customer).
 const ProtectedAdminRoute = ({ children }) => {
   const userString = localStorage.getItem('user');
   const user = userString ? JSON.parse(userString) : null;
   
   if (!user || user.role !== 'admin') {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
+  return children;
+};
+
+// --- GEMBOK KEAMANAN: Hanya Customer (Seller) ---
+// Admin TIDAK BOLEH mengakses fitur toko (model bisnis C2C).
+// Jika belum login → tendang ke /login. Jika admin → tendang ke /.
+const ProtectedCustomerRoute = ({ children }) => {
+  const userString = localStorage.getItem('user');
+  const user = userString ? JSON.parse(userString) : null;
+  
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.role === 'admin') return <Navigate to="/" replace />;
+  if (user.role !== 'customer') return <Navigate to="/" replace />;
   return children;
 };
 
@@ -46,6 +59,12 @@ function App() {
             {currentUser?.role === 'admin' && (
               <Link to="/admin" className="text-gray-400 hover:text-cyan-400 transition-colors text-sm font-semibold uppercase tracking-wider">
                 Command Center
+              </Link>
+            )}
+
+            {currentUser?.role === 'customer' && (
+              <Link to="/seller" className="text-gray-400 hover:text-cyan-400 transition-colors text-sm font-semibold uppercase tracking-wider">
+                Seller Dashboard
               </Link>
             )}
 
@@ -104,6 +123,16 @@ function App() {
             <ProtectedAdminRoute>
               <Admin />
             </ProtectedAdminRoute>
+          } 
+        />
+
+        {/* Rute Seller / Customer */}
+        <Route 
+          path="/seller/*" 
+          element={
+            <ProtectedCustomerRoute>
+              <SellerDashboard />
+            </ProtectedCustomerRoute>
           } 
         />
       </Routes>

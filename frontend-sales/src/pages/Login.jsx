@@ -43,14 +43,13 @@ function Login() {
     }
   }, [location, navigate]);
 
-  // Login Manual (Email & Password biasa)
   const handleManualLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/login', {
+      const response = await fetch('http://localhost:8888/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -58,8 +57,12 @@ function Login() {
 
       const data = await response.json();
 
-      if (response.ok) {
+      if (response.ok && data.user) {
+        // Simpan user ke localStorage
         localStorage.setItem('user', JSON.stringify(data.user));
+        // Simpan token jika ada
+        if (data.token) localStorage.setItem('token', data.token);
+        
         alert(`Welcome, ${data.user.name}! Access Granted.`);
         
         if (data.user.role === 'admin') {
@@ -68,10 +71,12 @@ function Login() {
           window.location.href = '/';
         }
       } else {
-        setError(data.message || 'Invalid credentials.');
+        // Server merespons tapi login gagal
+        setError(data.message || 'Invalid credentials. Check your email and password.');
       }
     } catch (err) {
-      setError('Connection to server lost.');
+      console.error('Login error:', err);
+      setError('Connection to server lost. Make sure the server is running.');
     } finally {
       setIsLoading(false);
     }
@@ -80,7 +85,7 @@ function Login() {
   // Fungsi Pemicu Login Google
   const handleGoogleLogin = () => {
     // Arahkan browser keluar dari React, menuju ke pintu API Laravel kita
-    window.location.href = 'http://127.0.0.1:8000/api/auth/google';
+    window.location.href = 'http://localhost:8888/api/auth/google';
   };
 
   return (
