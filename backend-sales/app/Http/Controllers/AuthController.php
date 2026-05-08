@@ -15,7 +15,12 @@ class AuthController extends Controller
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json(['message' => 'Akses Ditolak! Email atau password salah.'], 401);
         }
-        return response()->json(['message' => 'Login berhasil!', 'user' => $user]);
+        $token = $user->createToken('auth_token')->plainTextToken;
+        return response()->json([
+            'message' => 'Login berhasil!', 
+            'user' => $user,
+            'token' => $token
+        ]);
     }
 
     // --- FUNGSI BARU UNTUK GOOGLE ---
@@ -42,12 +47,18 @@ class AuthController extends Controller
                 ]
             );
 
-            // Karena kita menggunakan React yang terpisah, kita harus mengirim datanya
-            // lewat URL saat kembali ke React (di-encode agar rapi).
-            $userData = base64_encode(json_encode($user));
+            // Buat token Sanctum untuk user ini
+            $token = $user->createToken('auth_token')->plainTextToken;
             
-            // Lemparkan kembali ke React beserta data user-nya
-            return redirect('http://localhost:5173/login?auth=' . $userData);
+            // Sertakan token dalam data yang dikirim ke React
+            $payload = [
+                'user' => $user,
+                'token' => $token
+            ];
+            $authData = base64_encode(json_encode($payload));
+            
+            // Lemparkan kembali ke React beserta data user & token
+            return redirect('http://localhost:5173/login?auth=' . $authData);
 
         } catch (\Exception $e) {
             return redirect('http://localhost:5173/login?error=google_auth_failed');

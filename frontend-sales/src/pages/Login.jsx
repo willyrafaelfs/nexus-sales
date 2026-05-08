@@ -25,17 +25,22 @@ function Login() {
       try {
         // Menerjemahkan data rahasia (base64) dari Laravel kembali menjadi text
         const decodedData = atob(authData);
-        const user = JSON.parse(decodedData);
+        const payload = JSON.parse(decodedData);
+        const { user, token } = payload;
 
-        // Simpan KTP user ke browser
+        // Simpan KTP & Token user ke browser
         localStorage.setItem('user', JSON.stringify(user));
+        if (token) localStorage.setItem('token', token);
+        
         alert(`Authentication Successful. Welcome, ${user.name}!`);
 
-        // Arahkan tujuan sesuai jabatan
+        // Arahkan tujuan sesuai jabatan (3 role)
         if (user.role === 'admin') {
-          navigate('/admin');
+          window.location.href = '/admin';
+        } else if (user.role === 'seller') {
+          window.location.href = '/seller';
         } else {
-          window.location.href = '/'; // Pake window.location agar navbar me-refresh state-nya
+          window.location.href = '/'; // Customer → Beranda
         }
       } catch (err) {
         setError('Data corruption detected during Google Login.');
@@ -66,9 +71,11 @@ function Login() {
         alert(`Welcome, ${data.user.name}! Access Granted.`);
         
         if (data.user.role === 'admin') {
-          navigate('/admin');
+          window.location.href = '/admin';
+        } else if (data.user.role === 'seller') {
+          window.location.href = '/seller';
         } else {
-          window.location.href = '/';
+          window.location.href = '/'; // Customer → Beranda
         }
       } else {
         // Server merespons tapi login gagal

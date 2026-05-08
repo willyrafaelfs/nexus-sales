@@ -11,21 +11,26 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Buat Akun Admin
+
         User::create([
-            'name' => 'Commander Admin',
+            'name' => 'Super Admin',
             'email' => 'admin@nexus.com',
             'password' => Hash::make('admin123'),
             'role' => 'admin'
         ]);
 
-        // 2. Buat Akun Customer (Menggunakan namamu!)
         User::create([
             'name' => 'Willy',
             'email' => 'willy@nexus.com',
             'password' => Hash::make('willy123'),
             'role' => 'customer'
         ]);
-        
+
+        User::create([
+            'name' => 'Rizky',
+            'email' => 'rizky@nexus.com',
+            'password' => Hash::make('satria123'),
+            'role' => 'customer'
+        ]);
     }
 }

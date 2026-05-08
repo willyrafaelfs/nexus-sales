@@ -4,29 +4,37 @@ import Shop from './pages/Shop';
 import Admin from './pages/Admin';
 import Login from './pages/Login';
 import SellerDashboard from './pages/seller/SellerDashboard';
+import CreateShop from './pages/seller/CreateShop';
 
-// --- GEMBOK KEAMANAN: Hanya Admin ---
-// Jika bukan admin, tendang ke Beranda (bukan login, karena mungkin sudah login sebagai customer).
+// === GEMBOK KEAMANAN 1: Hanya Admin ===
+// Jika bukan admin, tendang ke Beranda.
 const ProtectedAdminRoute = ({ children }) => {
   const userString = localStorage.getItem('user');
   const user = userString ? JSON.parse(userString) : null;
-  
-  if (!user || user.role !== 'admin') {
-    return <Navigate to="/" replace />;
-  }
+  if (!user || user.role !== 'admin') return <Navigate to="/" replace />;
   return children;
 };
 
-// --- GEMBOK KEAMANAN: Hanya Customer (Seller) ---
-// Admin TIDAK BOLEH mengakses fitur toko (model bisnis C2C).
-// Jika belum login → tendang ke /login. Jika admin → tendang ke /.
+// === GEMBOK KEAMANAN 2: Hanya Seller ===
+// Jika customer (belum punya toko), arahkan ke halaman buat toko.
+// Jika admin, tendang ke Beranda.
+const ProtectedSellerRoute = ({ children }) => {
+  const userString = localStorage.getItem('user');
+  const user = userString ? JSON.parse(userString) : null;
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.role === 'admin') return <Navigate to="/" replace />;
+  if (user.role === 'customer') return <Navigate to="/create-shop" replace />;
+  if (user.role !== 'seller') return <Navigate to="/" replace />;
+  return children;
+};
+
+// === GEMBOK KEAMANAN 3: Customer & Seller (Belanja) ===
+// Izinkan customer dan seller untuk berbelanja, blokir admin.
 const ProtectedCustomerRoute = ({ children }) => {
   const userString = localStorage.getItem('user');
   const user = userString ? JSON.parse(userString) : null;
-  
   if (!user) return <Navigate to="/login" replace />;
   if (user.role === 'admin') return <Navigate to="/" replace />;
-  if (user.role !== 'customer') return <Navigate to="/" replace />;
   return children;
 };
 
@@ -39,6 +47,7 @@ function App() {
 
   const handleLogout = () => {
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
     window.location.href = '/login'; 
   };
 
@@ -62,9 +71,15 @@ function App() {
               </Link>
             )}
 
-            {currentUser?.role === 'customer' && (
+            {currentUser?.role === 'seller' && (
               <Link to="/seller" className="text-gray-400 hover:text-cyan-400 transition-colors text-sm font-semibold uppercase tracking-wider">
                 Seller Dashboard
+              </Link>
+            )}
+
+            {currentUser?.role === 'customer' && (
+              <Link to="/create-shop" className="text-gray-400 hover:text-cyan-400 transition-colors text-sm font-semibold uppercase tracking-wider">
+                Buka Toko
               </Link>
             )}
 
@@ -116,7 +131,7 @@ function App() {
         <Route path="/" element={<Shop />} />
         <Route path="/login" element={<Login />} />
         
-        {/* Rute Admin yang dibungkus dengan Gembok Keamanan */}
+        {/* Rute Admin — hanya role admin */}
         <Route 
           path="/admin" 
           element={
@@ -126,12 +141,22 @@ function App() {
           } 
         />
 
-        {/* Rute Seller / Customer */}
+        {/* Rute Seller Dashboard — hanya role seller */}
         <Route 
           path="/seller/*" 
           element={
-            <ProtectedCustomerRoute>
+            <ProtectedSellerRoute>
               <SellerDashboard />
+            </ProtectedSellerRoute>
+          } 
+        />
+
+        {/* Rute Buka Toko — customer yang ingin naik pangkat */}
+        <Route 
+          path="/create-shop" 
+          element={
+            <ProtectedCustomerRoute>
+              <CreateShop />
             </ProtectedCustomerRoute>
           } 
         />

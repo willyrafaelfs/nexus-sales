@@ -35,6 +35,8 @@ Route::get('/test-minio', function () {
         return response()->json(['error' => $e->getMessage()]);
     }
 });
-Route::post('/products', [ProductController::class, 'store']);
-Route::get('/shop', [ShopController::class, 'myShop']);
-Route::post('/shop', [ShopController::class, 'store']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/shop', [ShopController::class, 'myShop']);
+    Route::post('/shop', [ShopController::class, 'store']);
+    Route::post('/products', [ProductController::class, 'store']);
+});
