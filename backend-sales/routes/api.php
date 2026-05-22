@@ -8,9 +8,11 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\AdminController;
 
 // 1. Jalur Publik (Tanpa Login)
 Route::get('/products', [ProductController::class, 'index']); // <-- Sekarang mengarah ke ProductController
+Route::get('/products/{id}', [ProductController::class, 'show']);
 
 // 2. Auth & SSO Google
 Route::post('/login', [AuthController::class, 'login']);
@@ -69,8 +71,14 @@ Route::get('/setup-minio', function () {
 
 // 5. Jalur Terkunci (Wajib Login/Punya KTP)
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/admin/dashboard', [AdminController::class, 'dashboard']);
     Route::get('/shop', [ShopController::class, 'myShop']);
     Route::get('/orders', [OrderController::class, 'index']);
+    Route::get('/seller/orders', [OrderController::class, 'sellerOrders']);
+    Route::put('/seller/orders/{itemId}/ship', [OrderController::class, 'shipItem']);
+    Route::get('/seller/metrics', [ShopController::class, 'metrics']);
+    Route::get('/seller/products', [ShopController::class, 'myProducts']);
     Route::post('/shop', [ShopController::class, 'store']);
     Route::post('/products', [ProductController::class, 'store']);
+    Route::get('/seller/products/{id}', [ProductController::class, 'show']);
 });

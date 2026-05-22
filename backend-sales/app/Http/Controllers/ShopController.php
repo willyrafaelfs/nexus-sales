@@ -52,4 +52,49 @@ class ShopController extends Controller
             'shop' => $shop,
             'new_role' => $user->role // Kirim role baru ke frontend
         ]);
-    }}
+    }
+    // 1. Menarik Metrik Penjualan Riil
+    public function metrics(Request $request)
+    {
+        $shop = \App\Models\Shop::where('user_id', $request->user()->id)->first();
+        if (!$shop) {
+            return response()->json(['message' => 'Toko tidak ditemukan'], 404);
+        }
+
+        // Hitung total produk yang dimiliki toko
+        $totalProducts = \App\Models\Product::where('shop_id', $shop->id)->count();
+
+        // Hitung PENDAPATAN RIIL: (Harga x Jumlah) dari order_items milik toko ini
+        // HANYA dihitung jika status pesanan induknya sudah 'paid' (lunas)
+        $totalRevenue = \App\Models\OrderItem::whereHas('product', function($q) use ($shop) {
+            $q->where('shop_id', $shop->id);
+        })->whereHas('order', function($q) {
+            $q->where('status', 'paid'); 
+        })->sum(\DB::raw('price * quantity'));
+
+        return response()->json([
+            'status' => 'Sukses!',
+            'data' => [
+                'total_products' => $totalProducts,
+                'total_revenue' => $totalRevenue
+            ]
+        ]);
+    }
+
+    // 2. Menarik Daftar Produk Khusus Milik Toko Ini
+    public function myProducts(Request $request)
+    {
+        $shop = \App\Models\Shop::where('user_id', $request->user()->id)->first();
+        if (!$shop) {
+            return response()->json(['message' => 'Toko tidak ditemukan'], 404);
+        }
+
+        // Tarik produk berdasarkan ID toko
+        $products = \App\Models\Product::where('shop_id', $shop->id)->latest()->get();
+
+        return response()->json([
+            'status' => 'Sukses!',
+            'data' => $products
+        ]);
+    }
+}

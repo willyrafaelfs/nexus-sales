@@ -12,8 +12,12 @@ class CheckoutController extends Controller
 {
     public function process(Request $request)
     {
+        // Tangkap ID pembeli jika mereka menggunakan token login (Sanctum)
+        $userId = auth('sanctum')->check() ? auth('sanctum')->id() : null;
+
         // 1. Simpan order ke database
         $order = Order::create([
+            'user_id' => $userId, // Menyambungkan pesanan dengan pembeli
             'customer_name' => $request->customer_name ?? 'Guest User',
             'total_price' => $request->total_price,
             'status' => 'pending'
@@ -34,7 +38,7 @@ class CheckoutController extends Controller
         Config::$serverKey = env('MIDTRANS_SERVER_KEY');
         Config::$isProduction = env('MIDTRANS_IS_PRODUCTION', false);
         Config::$isSanitized = true;
-        Config::$is3ds = true; // Fitur keamanan wajib untuk kartu kredit
+        Config::$is3ds = true; 
 
         // 3. Buat Nomor Pesanan Unik berdasarkan ID database
         $orderId = 'ORD-' . $order->id . '-' . time();
@@ -43,11 +47,10 @@ class CheckoutController extends Controller
         $params = [
             'transaction_details' => [
                 'order_id' => $orderId,
-                'gross_amount' => (int) $request->total_price, // Total harga dari React
+                'gross_amount' => (int) $request->total_price,
             ],
             'customer_details' => [
                 'first_name' => $request->customer_name ?? 'Guest User',
-                // Email aslinya harus dinamis, ini kita pakai dummy untuk contoh
                 'email' => 'customer@contoh.com', 
             ]
         ];
@@ -56,11 +59,23 @@ class CheckoutController extends Controller
             // 5. Minta Token Pembayaran ke Server Midtrans
             $snapToken = Snap::getSnapToken($params);
 
-            // 6. Kembalikan Token dan Nomor Pesanan ke React
+            // 6. Buat URL Pembayaran Langsung (Tergantung mode Sandbox/Production)
+            $paymentUrl = env('MIDTRANS_IS_PRODUCTION', false) 
+                ? "https://app.midtrans.com/snap/v2/vtweb/" . $snapToken
+                : "https://app.sandbox.midtrans.com/snap/v2/vtweb/" . $snapToken;
+
+            // 7. Simpan Token dan URL ke Database agar bisa dilanjutkan nanti
+            $order->update([
+                'snap_token' => $snapToken,
+                'payment_url' => $paymentUrl
+            ]);
+
+            // 8. Kembalikan respons ke React
             return response()->json([
                 'status' => 'success',
                 'order_id' => $orderId,
                 'snap_token' => $snapToken,
+                'payment_url' => $paymentUrl,
                 'message' => 'Token berhasil dibuat!'
             ]);
 
@@ -74,7 +89,6 @@ class CheckoutController extends Controller
 
     public function success(Request $request)
     {
-        // Format order_id adalah 'ORD-{id}-{timestamp}'
         $parts = explode('-', $request->order_id);
         if (count($parts) >= 2) {
             $id = $parts[1];

@@ -24,6 +24,22 @@ class ProductController extends Controller
         }
     }
 
+    // Mengambil detail satu produk spesifik
+    public function show($id)
+    {
+        try {
+            // Ambil produk berdasarkan ID, sertakan juga nama tokonya
+            $product = Product::with('shop:id,nama_toko')->findOrFail($id);
+
+            return response()->json([
+                'status' => 'Sukses!',
+                'data' => $product
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Produk tidak ditemukan'], 404);
+        }
+    }
+
     // Fungsi lama milikmu untuk upload barang
     public function store(Request $request)
     {
