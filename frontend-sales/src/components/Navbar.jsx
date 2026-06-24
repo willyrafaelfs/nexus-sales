@@ -6,12 +6,14 @@ function Navbar() {
   const userString = localStorage.getItem('user');
   const currentUser = userString ? JSON.parse(userString) : null;
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const { cart, setIsCartOpen } = useCart();
+  const { cart, setIsCartOpen, clearCartForLogout } = useCart();
 
   const handleLogout = () => {
+    // Bersihkan keranjang user ini DULU (perlu baca user id sebelum dihapus)
+    clearCartForLogout();
     localStorage.removeItem('user');
     localStorage.removeItem('token');
-    window.location.href = '/login'; 
+    window.location.href = '/login';
   };
 
   const totalCartItems = cart.reduce((sum, item) => sum + item.quantity, 0);

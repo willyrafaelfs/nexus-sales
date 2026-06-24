@@ -20,8 +20,10 @@ class CheckoutController extends Controller
 
     public function process(Request $request)
     {
-        // Tangkap ID pembeli jika mereka menggunakan token login (Sanctum)
-        $userId = auth('sanctum')->check() ? auth('sanctum')->id() : null;
+        // Identitas pembeli WAJIB dari token (route di balik auth:sanctum),
+        // JANGAN percaya user_id yang dikirim frontend.
+        $user = $request->user();
+        $userId = $user->id;
 
         // 0. Validasi stok SEBELUM membuat order — tolak jika tidak cukup
         if ($request->has('items') && is_array($request->items)) {
@@ -39,8 +41,8 @@ class CheckoutController extends Controller
 
         // 1. Simpan order ke database
         $order = Order::create([
-            'user_id' => $userId, // Menyambungkan pesanan dengan pembeli
-            'customer_name' => $request->customer_name ?? 'Guest User',
+            'user_id' => $userId, // Identitas dari token, bukan dari frontend
+            'customer_name' => $request->customer_name ?? $user->name,
             'total_price' => $request->total_price,
             'status' => 'pending'
         ]);
@@ -72,8 +74,8 @@ class CheckoutController extends Controller
                 'gross_amount' => (int) $request->total_price,
             ],
             'customer_details' => [
-                'first_name' => $request->customer_name ?? 'Guest User',
-                'email' => 'customer@contoh.com', 
+                'first_name' => $request->customer_name ?? $user->name,
+                'email' => $user->email,
             ]
         ];
 

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 
 function CartPanel() {
   const { cart, setCart, isCartOpen, setIsCartOpen, updateQuantity, removeFromCart } = useCart();
+  const navigate = useNavigate();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   const [provinces, setProvinces] = useState([]);
@@ -87,6 +89,16 @@ function CartPanel() {
 
   const handleCheckout = async () => {
     if (cart.length === 0) return;
+
+    // GERBANG: checkout wajib login (backend juga menolak 401 tanpa token)
+    if (!localStorage.getItem('token')) {
+      localStorage.setItem('returnTo', '/');
+      setIsCartOpen(false);
+      alert('Masuk dulu untuk checkout.');
+      navigate('/login');
+      return;
+    }
+
     if (!selectedCity || !selectedCourier || shippingCost === 0) {
       alert("Mohon lengkapi tujuan pengiriman dan kurir terlebih dahulu!");
       return;

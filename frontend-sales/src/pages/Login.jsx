@@ -10,6 +10,17 @@ function Login() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Arahkan setelah login: hormati returnTo (mis. dari gerbang keranjang), lalu role.
+  const redirectAfterLogin = (user) => {
+    const returnTo = localStorage.getItem('returnTo');
+    localStorage.removeItem('returnTo');
+
+    if (user.role === 'admin') { window.location.href = '/admin'; return; }
+    if (returnTo) { window.location.href = returnTo; return; } // kembali ke halaman asal
+    if (user.role === 'seller') { window.location.href = '/seller'; return; }
+    window.location.href = '/'; // Customer → Beranda
+  };
+
   // FUNGSI BARU: "Jaring" penangkap balasan dari Google
   useEffect(() => {
     // Membaca URL saat ini (misal: /login?auth=eyJ... atau /login?error=...)
@@ -34,14 +45,7 @@ function Login() {
         
         alert(`Authentication Successful. Welcome, ${user.name}!`);
 
-        // Arahkan tujuan sesuai jabatan (3 role)
-        if (user.role === 'admin') {
-          window.location.href = '/admin';
-        } else if (user.role === 'seller') {
-          window.location.href = '/seller';
-        } else {
-          window.location.href = '/'; // Customer → Beranda
-        }
+        redirectAfterLogin(user);
       } catch (err) {
         setError('Data corruption detected during Google Login.');
       }
@@ -69,14 +73,8 @@ function Login() {
         if (data.token) localStorage.setItem('token', data.token);
         
         alert(`Welcome, ${data.user.name}! Access Granted.`);
-        
-        if (data.user.role === 'admin') {
-          window.location.href = '/admin';
-        } else if (data.user.role === 'seller') {
-          window.location.href = '/seller';
-        } else {
-          window.location.href = '/'; // Customer → Beranda
-        }
+
+        redirectAfterLogin(data.user);
       } else {
         // Server merespons tapi login gagal
         setError(data.message || 'Invalid credentials. Check your email and password.');

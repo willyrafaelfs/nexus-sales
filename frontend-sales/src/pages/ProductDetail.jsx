@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 
 function ProductDetail() {
@@ -9,6 +9,7 @@ function ProductDetail() {
   const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const { addToCart, updateQuantity, cart, setIsCartOpen } = useCart();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetch(`http://localhost:8888/api/products/${id}`)
@@ -28,7 +29,15 @@ function ProductDetail() {
 
   const handleAddToCart = () => {
     if (!product) return;
-    
+
+    // GERBANG: tamu (belum login) tidak boleh menambah ke keranjang
+    if (!localStorage.getItem('token')) {
+      localStorage.setItem('returnTo', window.location.pathname); // kembali ke sini setelah login
+      alert('Masuk dulu untuk berbelanja.');
+      navigate('/login');
+      return;
+    }
+
     // Check if already in cart
     const existing = cart.find(item => item.id === product.id);
     if (existing) {

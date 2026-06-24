@@ -27,10 +27,10 @@ Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallbac
 Route::get('/rajaongkir/provinces', [RajaOngkirController::class, 'getProvinces']);
 Route::get('/rajaongkir/cities/{provinceId}', [RajaOngkirController::class, 'getCities']);
 Route::post('/rajaongkir/cost', [RajaOngkirController::class, 'checkCost']);
-Route::middleware('throttle:30,1')->group(function () {
-    Route::post('/checkout', [CheckoutController::class, 'process']); // <-- Hanya ini jalur checkout yang benar
-    Route::post('/checkout/success', [CheckoutController::class, 'success']);
-});
+// Callback sukses dari frontend & webhook Midtrans TETAP PUBLIK
+// (dipanggil server Midtrans / setelah Snap) — jangan dipagari auth.
+Route::middleware('throttle:30,1')
+    ->post('/checkout/success', [CheckoutController::class, 'success']);
 
 // Webhook resmi Midtrans — divalidasi signature, dibatasi rate limit
 Route::middleware('throttle:60,1')
@@ -81,6 +81,9 @@ Route::get('/setup-minio', function () {
 
 // 5. Jalur Terkunci (Wajib Login/Punya KTP)
 Route::middleware('auth:sanctum')->group(function () {
+    // Checkout WAJIB login — gerbang sebenarnya ada di sini (bukan di frontend)
+    Route::post('/checkout', [CheckoutController::class, 'process'])->middleware('throttle:30,1');
+
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard']);
     Route::get('/shop', [ShopController::class, 'myShop']);
     Route::get('/orders', [OrderController::class, 'index']);
