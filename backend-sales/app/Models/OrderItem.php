@@ -18,10 +18,11 @@ class OrderItem extends Model
         return $this->belongsTo(Order::class);
     }
 
-    // Relasi ke Product (Setiap item pesanan merujuk ke satu produk)
+    // Relasi ke Product (Setiap item pesanan merujuk ke satu produk).
+    // withTrashed(): riwayat pesanan tetap menampilkan produk walau sudah di-soft-delete.
     public function product()
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(Product::class)->withTrashed();
     }
 
     // Relasi ke Shipment (item menempel ke shipment saat seller mengirim)

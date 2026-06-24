@@ -8,6 +8,8 @@ export default function SellerDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview'); // overview, my-products, incoming-orders, add-product
   const [editingProduct, setEditingProduct] = useState(null); // produk yang sedang diedit (null = mode tambah)
+  const [deletingId, setDeletingId] = useState(null);          // produk yang sedang dihapus
+  const [productToast, setProductToast] = useState(null);      // notifikasi hapus produk
 
   // Data Analitik & Produk Khusus Toko
   const [metrics, setMetrics] = useState({ total_products: 0, total_revenue: 0 });
@@ -70,6 +72,36 @@ export default function SellerDashboard() {
       setProductsError(err.message || 'Terjadi kesalahan saat memuat produk.');
     } finally {
       setIsProductsLoading(false);
+    }
+  };
+
+  // Hapus produk (dengan konfirmasi)
+  const handleDeleteProduct = async (product) => {
+    const ok = window.confirm(`Hapus produk "${product.name}"? Tindakan ini tidak bisa dibatalkan.`);
+    if (!ok) return;
+
+    setDeletingId(product.id);
+    try {
+      const res = await fetch(`http://localhost:8888/api/products/${product.id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+      });
+      const json = await res.json().catch(() => ({}));
+
+      if (res.ok) {
+        // Hapus dari state tanpa reload penuh
+        setProducts((prev) => prev.filter((p) => p.id !== product.id));
+        setProductToast({ type: 'success', message: `Produk "${product.name}" berhasil dihapus.` });
+      } else if (res.status === 403) {
+        setProductToast({ type: 'error', message: 'Anda tidak berhak menghapus produk ini.' });
+      } else {
+        setProductToast({ type: 'error', message: json.message || 'Gagal menghapus produk.' });
+      }
+    } catch (e) {
+      setProductToast({ type: 'error', message: 'Koneksi ke server gagal.' });
+    } finally {
+      setDeletingId(null);
+      setTimeout(() => setProductToast(null), 4000);
     }
   };
 
@@ -323,6 +355,24 @@ export default function SellerDashboard() {
             </div>
           )}
 
+          {/* Toast notifikasi hapus produk */}
+          {productToast && (
+            <div className={`fixed bottom-5 right-5 z-50 px-5 py-4 rounded-xl shadow-2xl flex items-center gap-3 max-w-md border backdrop-blur-md ${
+              productToast.type === 'success'
+                ? 'bg-cyan-950/90 border-cyan-500 text-cyan-200'
+                : 'bg-red-950/90 border-red-500 text-red-200'
+            }`}>
+              <span className={`rounded-full p-1.5 shrink-0 ${productToast.type === 'success' ? 'bg-cyan-500 text-gray-950' : 'bg-red-500 text-white'}`}>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {productToast.type === 'success'
+                    ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                    : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />}
+                </svg>
+              </span>
+              <p className="font-semibold text-sm">{productToast.message}</p>
+            </div>
+          )}
+
           {/* TAB 2: MY PRODUCTS */}
           {activeTab === 'my-products' && (
             <div className="space-y-8 animate-fade-in">
@@ -429,13 +479,23 @@ export default function SellerDashboard() {
                           </span>
                         </div>
 
-                        <button
-                          onClick={() => { setEditingProduct(product); setActiveTab('add-product'); }}
-                          className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-gray-800 hover:bg-cyan-600 border border-gray-700 hover:border-cyan-500 text-gray-300 hover:text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-colors"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                          Edit Produk &amp; Stok
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => { setEditingProduct(product); setActiveTab('add-product'); }}
+                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-gray-800 hover:bg-cyan-600 border border-gray-700 hover:border-cyan-500 text-gray-300 hover:text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-colors"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteProduct(product)}
+                            disabled={deletingId === product.id}
+                            className="flex items-center justify-center gap-2 px-3 py-2 bg-gray-800 hover:bg-red-600 border border-gray-700 hover:border-red-500 text-gray-300 hover:text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            {deletingId === product.id ? '...' : 'Hapus'}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}

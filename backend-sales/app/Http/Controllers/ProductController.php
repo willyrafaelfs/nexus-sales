@@ -4,10 +4,13 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use App\Models\Product; 
+use App\Models\Product;
+use App\Services\AuditService;
 
 class ProductController extends Controller
 {
+    public function __construct(private AuditService $audit) {}
+
     // Fungsi baru untuk menarik daftar katalog ke halaman utama
     public function index()
     {
@@ -139,5 +142,33 @@ class ProductController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => 'Gagal memproses: ' . $e->getMessage()], 500);
         }
+    }
+
+    // Hapus produk (SOFT DELETE) — riwayat pesanan (order_items) tetap utuh.
+    public function destroy(Request $request, $id)
+    {
+        $user = $request->user();
+        $product = Product::with('shop')->findOrFail($id);
+
+        // Otorisasi: hanya pemilik toko yang boleh menghapus produknya
+        if (!$product->shop || $product->shop->user_id !== $user->id) {
+            return response()->json(['message' => 'Anda tidak berhak menghapus produk ini.'], 403);
+        }
+
+        // Soft delete: produk hilang dari katalog & dashboard, order_items lama tetap utuh.
+        // File gambar di MinIO sengaja DIBIARKAN agar riwayat pesanan tetap menampilkannya.
+        $product->delete();
+
+        // Audit log
+        $this->audit->record('product_deleted', [
+            'product_id'   => $product->id,
+            'product_name' => $product->name,
+            'shop_id'      => $product->shop_id,
+        ], $user->id);
+
+        return response()->json([
+            'status'  => 'Sukses!',
+            'message' => 'Produk berhasil dihapus dari katalog.',
+        ]);
     }
 }
