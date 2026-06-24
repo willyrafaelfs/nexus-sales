@@ -23,6 +23,39 @@ class AuthController extends Controller
         ]);
     }
 
+    // Registrasi akun baru (role default: customer), langsung terbitkan token Sanctum
+    public function register(Request $request) {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:8|confirmed',
+        ], [
+            'name.required'      => 'Nama wajib diisi.',
+            'email.required'     => 'Email wajib diisi.',
+            'email.email'        => 'Format email tidak valid.',
+            'email.unique'       => 'Email sudah terdaftar. Silakan masuk atau gunakan email lain.',
+            'password.required'  => 'Password wajib diisi.',
+            'password.min'       => 'Password minimal 8 karakter.',
+            'password.confirmed' => 'Konfirmasi password tidak cocok.',
+        ]);
+
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'role' => 'customer', // Default role
+        ]);
+
+        // Terbitkan token PERSIS seperti alur login → frontend bisa auto-login
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'Registrasi berhasil!',
+            'user' => $user,
+            'token' => $token
+        ], 201);
+    }
+
     // --- FUNGSI BARU UNTUK GOOGLE ---
 
     // 1. Mengarahkan user ke halaman login Google

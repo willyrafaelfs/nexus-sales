@@ -19,6 +19,7 @@ Route::get('/products/{id}', [ProductController::class, 'show']);
 
 // 2. Auth & SSO Google
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register']);
 Route::get('/auth/google', [AuthController::class, 'redirectToGoogle']);
 Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
 

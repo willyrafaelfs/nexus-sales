@@ -3,6 +3,7 @@ import Shop from './pages/Shop';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminCrmLogs from './pages/AdminCrmLogs';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import SellerDashboard from './pages/seller/SellerDashboard';
 import CreateShop from './pages/seller/CreateShop';
 import ProductDetail from './pages/ProductDetail';
@@ -55,6 +56,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Shop />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         
         {/* Rute Admin — hanya role admin */}
         <Route

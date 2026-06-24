@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -169,6 +169,14 @@ function Login() {
           </svg>
           INITIALIZE WITH GOOGLE
         </button>
+
+        {/* Link silang ke register */}
+        <p className="relative z-10 text-center text-gray-500 text-sm mt-6">
+          Belum punya akun?{' '}
+          <Link to="/register" className="text-cyan-400 hover:text-cyan-300 font-semibold">
+            Daftar
+          </Link>
+        </p>
 
       </div>
     </div>
