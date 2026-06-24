@@ -7,13 +7,35 @@ use Midtrans\Config;
 use Midtrans\Snap;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Services\InventoryService;
+use App\Services\PaymentService;
+use App\Exceptions\InsufficientStockException;
 
 class CheckoutController extends Controller
 {
+    public function __construct(
+        private InventoryService $inventory,
+        private PaymentService $payments
+    ) {}
+
     public function process(Request $request)
     {
         // Tangkap ID pembeli jika mereka menggunakan token login (Sanctum)
         $userId = auth('sanctum')->check() ? auth('sanctum')->id() : null;
+
+        // 0. Validasi stok SEBELUM membuat order — tolak jika tidak cukup
+        if ($request->has('items') && is_array($request->items)) {
+            try {
+                foreach ($request->items as $item) {
+                    $this->inventory->assertAvailable((int) $item['id'], (int) $item['quantity']);
+                }
+            } catch (InsufficientStockException $e) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => $e->getMessage()
+                ], 422);
+            }
+        }
 
         // 1. Simpan order ke database
         $order = Order::create([
@@ -89,16 +111,17 @@ class CheckoutController extends Controller
 
     public function success(Request $request)
     {
-        $parts = explode('-', $request->order_id);
-        if (count($parts) >= 2) {
-            $id = $parts[1];
-            $order = Order::find($id);
-            if ($order) {
-                $order->status = 'paid';
-                $order->save();
-                return response()->json(['status' => 'success', 'message' => 'Status pesanan berhasil diupdate']);
-            }
+        // Callback frontend setelah Snap sukses. Tetap melalui PaymentService
+        // agar idempotent & memicu event yang sama dengan webhook resmi.
+        $id = $this->payments->resolveOrderId((string) $request->order_id);
+        $order = $id ? Order::find($id) : null;
+
+        if (!$order) {
+            return response()->json(['status' => 'error', 'message' => 'Pesanan tidak ditemukan'], 400);
         }
-        return response()->json(['status' => 'error', 'message' => 'Pesanan tidak ditemukan'], 400);
+
+        $this->payments->markAsPaid($order);
+
+        return response()->json(['status' => 'success', 'message' => 'Status pesanan berhasil diupdate']);
     }
 }

@@ -48,7 +48,8 @@ class ProductController extends Controller
             'price' => 'required|numeric',
             'category' => 'required|string',
             'description' => 'nullable|string',
-            'shop_id' => 'required|integer', 
+            'stock' => 'nullable|integer|min:0',
+            'shop_id' => 'required|integer',
             'foto_produk' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
@@ -61,8 +62,9 @@ class ProductController extends Controller
                 'price' => $request->price,
                 'category' => $request->category,
                 'description' => $request->description,
+                'stock' => $request->stock ?? 100,
                 'shop_id' => $request->shop_id,
-                'image' => $fullUrl 
+                'image' => $fullUrl
             ]);
 
             $product->link_gambar = $fullUrl;

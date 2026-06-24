@@ -6,6 +6,7 @@ import SellerDashboard from './pages/seller/SellerDashboard';
 import CreateShop from './pages/seller/CreateShop';
 import ProductDetail from './pages/ProductDetail';
 import MyOrders from './pages/MyOrders';
+import Tracking from './pages/Tracking';
 import Navbar from './components/Navbar';
 import CartPanel from './components/CartPanel';
 import { CartProvider } from './context/CartContext';
@@ -94,6 +95,10 @@ function App() {
         />
 
         <Route path="/product/:id" element={<ProductDetail />} />
+
+        {/* Tracking pengiriman — publik */}
+        <Route path="/track" element={<Tracking />} />
+        <Route path="/track/:tracking" element={<Tracking />} />
       </Routes>
     </BrowserRouter>
     </CartProvider>

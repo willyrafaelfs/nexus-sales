@@ -256,7 +256,7 @@ function MyOrders() {
                   </div>
                   
                   {order.status === 'pending' && (
-                    <button 
+                    <button
                       onClick={() => handlePayNow(order)}
                       className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/35 flex items-center justify-center gap-2 group/btn"
                     >
@@ -265,6 +265,19 @@ function MyOrders() {
                       </svg>
                       Lanjutkan Pembayaran
                     </button>
+                  )}
+
+                  {/* Lacak pengiriman jika shipment sudah dibuat (setelah pembayaran) */}
+                  {order.shipment?.tracking_number && (
+                    <Link
+                      to={`/track/${order.shipment.tracking_number}`}
+                      className="border border-cyan-500/40 text-cyan-400 hover:bg-cyan-600 hover:text-white font-bold py-3 px-6 rounded-xl transition-all flex items-center justify-center gap-2"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                      </svg>
+                      Lacak Pengiriman
+                    </Link>
                   )}
                 </div>
               </div>

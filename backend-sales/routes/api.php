@@ -9,10 +9,17 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\CrmController;
+use App\Http\Controllers\ShipmentController;
+use App\Http\Controllers\MidtransWebhookController;
 
 // 1. Jalur Publik (Tanpa Login)
 Route::get('/products', [ProductController::class, 'index']); // <-- Sekarang mengarah ke ProductController
 Route::get('/products/{id}', [ProductController::class, 'show']);
+
+// Tracking pengiriman (publik) — dibatasi rate limit agar tidak di-spam
+Route::middleware('throttle:60,1')
+    ->get('/shipments/{tracking}/track', [ShipmentController::class, 'track']);
 
 // 2. Auth & SSO Google
 Route::post('/login', [AuthController::class, 'login']);
@@ -23,8 +30,14 @@ Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallbac
 Route::get('/rajaongkir/provinces', [RajaOngkirController::class, 'getProvinces']);
 Route::get('/rajaongkir/cities/{provinceId}', [RajaOngkirController::class, 'getCities']);
 Route::post('/rajaongkir/cost', [RajaOngkirController::class, 'checkCost']);
-Route::post('/checkout', [CheckoutController::class, 'process']); // <-- Hanya ini jalur checkout yang benar
-Route::post('/checkout/success', [CheckoutController::class, 'success']);
+Route::middleware('throttle:30,1')->group(function () {
+    Route::post('/checkout', [CheckoutController::class, 'process']); // <-- Hanya ini jalur checkout yang benar
+    Route::post('/checkout/success', [CheckoutController::class, 'success']);
+});
+
+// Webhook resmi Midtrans — divalidasi signature, dibatasi rate limit
+Route::middleware('throttle:60,1')
+    ->post('/midtrans/notification', [MidtransWebhookController::class, 'handle']);
 
 // 4. Setup MinIO — Buat bucket dan set public agar gambar bisa diakses browser
 Route::get('/setup-minio', function () {
@@ -81,4 +94,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/shop', [ShopController::class, 'store']);
     Route::post('/products', [ProductController::class, 'store']);
     Route::get('/seller/products/{id}', [ProductController::class, 'show']);
+
+    // CRM — Super Admin & riwayat aktivitas customer
+    Route::get('/admin/crm/logs', [CrmController::class, 'index']);
+    Route::get('/customer/activity', [CrmController::class, 'myActivity']);
 });

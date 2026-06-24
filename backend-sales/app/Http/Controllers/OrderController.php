@@ -3,16 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Services\CrmService;
 use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
+    public function __construct(private CrmService $crm) {}
+
     // Fungsi untuk mengambil riwayat pesanan khusus pembeli yang sedang login
     public function index(Request $request) {
         $user = $request->user();
 
-        // Tarik pesanan miliknya, sertakan detail barang (orderItems) dan info produknya
-        $orders = Order::with('orderItems.product')
+        // Tarik pesanan miliknya, sertakan detail barang (orderItems), produk, dan pengiriman
+        $orders = Order::with(['orderItems.product', 'shipment'])
             ->where('user_id', $user->id)
             ->orderBy('created_at', 'desc')
             ->get();
@@ -61,13 +64,22 @@ class OrderController extends Controller
         ]);
 
         try {
-            $item = \App\Models\OrderItem::findOrFail($itemId);
-            
+            $item = \App\Models\OrderItem::with('order')->findOrFail($itemId);
+
             // Update resi dan status
             $item->update([
                 'resi' => $request->resi,
                 'status' => 'shipped'
             ]);
+
+            // Catat ke CRM: pesanan dikirim (resi diinput manual oleh seller)
+            $this->crm->logEvent(
+                eventType: 'order_shipped',
+                description: "Resi {$request->resi} diinput, item dikirim.",
+                userId: $item->order?->user_id,
+                orderId: $item->order_id,
+                payload: ['order_item_id' => $item->id, 'resi' => $request->resi]
+            );
 
             return response()->json([
                 'status' => 'Sukses!',

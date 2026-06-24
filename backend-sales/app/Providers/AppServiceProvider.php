@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use App\Contracts\LogisticsProvider;
+use App\Services\Logistics\SimulatedLogisticsProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -11,7 +13,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Provider logistik default = simulasi.
+        // Ganti baris ini ke KiriminAjaProvider::class saat integrasi API asli.
+        $this->app->bind(LogisticsProvider::class, SimulatedLogisticsProvider::class);
     }
 
     /**
@@ -19,6 +23,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Event → listener didaftarkan eksplisit di EventServiceProvider.
     }
 }

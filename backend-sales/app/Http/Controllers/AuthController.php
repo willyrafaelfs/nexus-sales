@@ -36,16 +36,22 @@ class AuthController extends Controller
             // Ambil data user dari Google
             $googleUser = Socialite::driver('google')->stateless()->user();
             
-            // Cek apakah email ini sudah ada di database kita. 
-            // Jika belum ada, buatkan akun baru secara otomatis!
-            $user = User::updateOrCreate(
-                ['email' => $googleUser->email],
-                [
+            // Cek apakah email ini sudah ada di database kita.
+            $user = User::where('email', $googleUser->email)->first();
+
+            if ($user) {
+                // Akun lama: cukup tautkan google_id, JANGAN reset role/password
+                $user->update(['google_id' => $googleUser->id]);
+            } else {
+                // Akun baru: buatkan otomatis sebagai customer
+                $user = User::create([
                     'name' => $googleUser->name,
-                    'password' => Hash::make(uniqid()), // Beri password acak karena loginnya pakai Google
-                    'role' => 'customer' // Default role
-                ]
-            );
+                    'email' => $googleUser->email,
+                    'google_id' => $googleUser->id, // Tautkan dengan ID Google permanen
+                    'password' => Hash::make(uniqid()), // Password acak (login via Google)
+                    'role' => 'customer', // Default role
+                ]);
+            }
 
             // Buat token Sanctum untuk user ini
             $token = $user->createToken('auth_token')->plainTextToken;
