@@ -17,10 +17,6 @@ use App\Http\Controllers\MidtransWebhookController;
 Route::get('/products', [ProductController::class, 'index']); // <-- Sekarang mengarah ke ProductController
 Route::get('/products/{id}', [ProductController::class, 'show']);
 
-// Tracking pengiriman (publik) — dibatasi rate limit agar tidak di-spam
-Route::middleware('throttle:60,1')
-    ->get('/shipments/{tracking}/track', [ShipmentController::class, 'track']);
-
 // 2. Auth & SSO Google
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/auth/google', [AuthController::class, 'redirectToGoogle']);
@@ -87,8 +83,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard']);
     Route::get('/shop', [ShopController::class, 'myShop']);
     Route::get('/orders', [OrderController::class, 'index']);
+    // Tracking pembeli per-order (wajib pemilik order)
+    Route::get('/orders/{order}/shipments', [OrderController::class, 'orderShipments']);
     Route::get('/seller/orders', [OrderController::class, 'sellerOrders']);
     Route::put('/seller/orders/{itemId}/ship', [OrderController::class, 'shipItem']);
+    // (Demo) majukan status pengiriman milik toko seller
+    Route::put('/seller/shipments/{shipmentId}/advance', [OrderController::class, 'advanceShipment']);
+    // Tracking internal by resi (dibatasi: pemilik order / toko)
+    Route::get('/shipments/{tracking}/track', [ShipmentController::class, 'track']);
     Route::get('/seller/metrics', [ShopController::class, 'metrics']);
     Route::get('/seller/products', [ShopController::class, 'myProducts']);
     Route::post('/shop', [ShopController::class, 'store']);

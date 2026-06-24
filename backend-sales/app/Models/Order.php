@@ -15,9 +15,9 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 
-    // Relasi ke shipment (pengiriman dibuat saat pembayaran sukses)
-    public function shipment()
+    // Relasi ke shipments (bisa >1: satu per shop dalam order yang sama)
+    public function shipments()
     {
-        return $this->hasOne(Shipment::class);
+        return $this->hasMany(Shipment::class);
     }
 }

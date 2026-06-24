@@ -3,6 +3,8 @@
 namespace App\Contracts;
 
 use App\Models\Order;
+use App\Models\Shop;
+use App\Models\Shipment;
 
 /**
  * Abstraksi provider logistik. Implementasi default = simulasi,
@@ -11,14 +13,16 @@ use App\Models\Order;
 interface LogisticsProvider
 {
     /**
-     * Buat pengiriman di sisi provider.
-     * Return array: courier, service, tracking_number, status, raw_response.
+     * Booking pengiriman untuk satu (order, shop).
+     *
+     * @param  string|null $manualResi Resi kurir asli dari seller; null = provider generate.
+     * @return array  courier, service, tracking_number, status, tracking_events[], raw_response
      */
-    public function createShipment(Order $order): array;
+    public function createShipment(Order $order, Shop $shop, ?string $manualResi = null): array;
 
     /**
-     * Lacak pengiriman berdasarkan nomor resi.
-     * Return array: status, history[] (masing-masing: status, description, timestamp).
+     * Lacak shipment: kembalikan status + events NYATA milik shipment ini.
+     * @return array  tracking_number, status, events[] ({time, code, description})
      */
-    public function track(string $trackingNumber): array;
+    public function track(Shipment $shipment): array;
 }

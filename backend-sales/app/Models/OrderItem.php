@@ -24,5 +24,11 @@ class OrderItem extends Model
         return $this->belongsTo(Product::class);
     }
 
-    protected $fillable = ['order_id', 'product_id', 'quantity', 'price', 'resi', 'status'];
+    // Relasi ke Shipment (item menempel ke shipment saat seller mengirim)
+    public function shipment()
+    {
+        return $this->belongsTo(Shipment::class);
+    }
+
+    protected $fillable = ['order_id', 'shipment_id', 'product_id', 'quantity', 'price', 'resi', 'status'];
 }

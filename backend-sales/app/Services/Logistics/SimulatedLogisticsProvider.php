@@ -4,75 +4,52 @@ namespace App\Services\Logistics;
 
 use App\Contracts\LogisticsProvider;
 use App\Models\Order;
+use App\Models\Shop;
 use App\Models\Shipment;
 
 /**
  * Provider logistik MODE SIMULASI.
- * Menghasilkan nomor resi "KRM..." dan timeline tracking buatan.
- * Cukup ganti binding di AppServiceProvider ke KiriminAjaProvider nanti.
+ * Generate resi "KRM..." (atau pakai resi manual seller) dan simpan
+ * tracking_events NYATA per shipment. Ganti binding di AppServiceProvider
+ * ke provider asli (KiriminAja) tanpa mengubah ShippingService.
  */
 class SimulatedLogisticsProvider implements LogisticsProvider
 {
-    public function createShipment(Order $order): array
+    public function createShipment(Order $order, Shop $shop, ?string $manualResi = null): array
     {
-        $tracking = 'KRM' . strtoupper(uniqid());
+        $tracking = $manualResi ?: 'KRM' . strtoupper(uniqid());
+        $now = now();
+
+        // Event pertama yang nyata (waktu sesungguhnya shipment dibuat)
+        $firstEvent = [
+            'time'        => $now->toIso8601String(),
+            'code'        => 'shipped',
+            'description' => 'Paket diserahkan ke kurir, menunggu penjemputan.',
+        ];
 
         return [
             'courier'         => 'NEXUS-LOG',
             'service'         => 'REG',
             'tracking_number' => $tracking,
-            'status'          => 'created',
+            'status'          => 'shipped',
+            'tracking_events' => [$firstEvent],
             'raw_response'    => [
                 'provider'    => 'simulated',
                 'order_id'    => $order->id,
-                'created_at'  => now()->toIso8601String(),
-                'message'     => 'Shipment booked (simulation).',
+                'shop_id'     => $shop->id,
+                'manual_resi' => $manualResi !== null,
+                'created_at'  => $now->toIso8601String(),
             ],
         ];
     }
 
-    public function track(string $trackingNumber): array
+    public function track(Shipment $shipment): array
     {
-        // Ambil shipment untuk tahu kapan dibuat & status terkini
-        $shipment = Shipment::where('tracking_number', $trackingNumber)->first();
-        $createdAt = $shipment?->created_at ?? now();
-        $status = $shipment?->status ?? 'created';
-
-        // Bangun timeline simulasi yang konsisten dengan status saat ini
-        $history = [
-            [
-                'status'      => 'created',
-                'description' => 'Pesanan dibuat, menunggu penjemputan kurir.',
-                'timestamp'   => $createdAt->toIso8601String(),
-            ],
-        ];
-
-        if (in_array($status, ['picked_up', 'in_transit', 'delivered'])) {
-            $history[] = [
-                'status'      => 'picked_up',
-                'description' => 'Paket telah dijemput kurir.',
-                'timestamp'   => $createdAt->copy()->addHours(2)->toIso8601String(),
-            ];
-        }
-        if (in_array($status, ['in_transit', 'delivered'])) {
-            $history[] = [
-                'status'      => 'in_transit',
-                'description' => 'Paket dalam perjalanan menuju alamat tujuan.',
-                'timestamp'   => $createdAt->copy()->addHours(8)->toIso8601String(),
-            ];
-        }
-        if ($status === 'delivered') {
-            $history[] = [
-                'status'      => 'delivered',
-                'description' => 'Paket telah diterima.',
-                'timestamp'   => $createdAt->copy()->addDay()->toIso8601String(),
-            ];
-        }
-
+        // Kembalikan events TERSIMPAN milik shipment ini (bukan hardcoded).
         return [
-            'tracking_number' => $trackingNumber,
-            'status'          => $status,
-            'history'         => $history,
+            'tracking_number' => $shipment->tracking_number,
+            'status'          => $shipment->status,
+            'events'          => $shipment->tracking_events ?? [],
         ];
     }
 }

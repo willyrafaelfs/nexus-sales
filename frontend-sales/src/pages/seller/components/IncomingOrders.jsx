@@ -70,10 +70,7 @@ export default function IncomingOrders() {
 
   const handleSimpanResi = async (e) => {
     e.preventDefault();
-    if (!resiNumber.trim()) {
-      alert('Nomor resi wajib diisi!');
-      return;
-    }
+    // Resi OPSIONAL: kosong → backend generate resi otomatis (simulasi)
 
     setIsShippingSubmit(true);
     const token = localStorage.getItem('token');
@@ -86,7 +83,8 @@ export default function IncomingOrders() {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        body: JSON.stringify({ resi: resiNumber.trim() })
+        // Kirim tracking_number hanya jika seller mengisinya
+        body: JSON.stringify(resiNumber.trim() ? { tracking_number: resiNumber.trim() } : {})
       });
 
       const json = await response.json();
@@ -95,11 +93,12 @@ export default function IncomingOrders() {
         throw new Error(json.message || 'Gagal memperbarui status pengiriman.');
       }
 
-      // Success interaction
+      // Success interaction — resi bisa dari input atau hasil generate backend
+      const resiHasil = json.data?.tracking_number || resiNumber.trim();
       setToastAlert({
         type: 'success',
         title: 'Barang Berhasil Dikirim!',
-        message: `Nomor resi ${resiNumber} berhasil disimpan untuk item #${selectedItemId}.`
+        message: `Resi ${resiHasil} aktif untuk pesanan ini.`
       });
 
       closeShipModal();
@@ -506,22 +505,24 @@ export default function IncomingOrders() {
                 </div>
               </div>
 
-              {/* Form Input Resi */}
+              {/* Form Input Resi (OPSIONAL) */}
               <form onSubmit={handleSimpanResi} className="space-y-5">
                 <div>
                   <label className="block text-gray-400 text-sm font-semibold mb-2" htmlFor="resi">
-                    Nomor Resi Pengiriman
+                    Nomor Resi Pengiriman <span className="text-gray-500 font-normal">(opsional)</span>
                   </label>
                   <input
                     type="text"
                     id="resi"
-                    required
                     autoFocus
                     value={resiNumber}
                     onChange={(e) => setResiNumber(e.target.value)}
-                    placeholder="Masukkan no resi resmi (Contoh: JNE123456789)"
+                    placeholder="Mis. JNE123456789"
                     className="w-full bg-gray-950 border border-gray-800 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 rounded-xl px-4 py-3 text-white transition-all text-sm font-mono tracking-wider"
                   />
+                  <p className="text-xs text-gray-500 mt-2">
+                    Kosongkan untuk <span className="text-cyan-400">generate resi otomatis</span> (simulasi), atau isi resi kurir asli.
+                  </p>
                 </div>
 
                 {/* Actions */}
@@ -535,14 +536,14 @@ export default function IncomingOrders() {
                   </button>
                   <button
                     type="submit"
-                    disabled={isShippingSubmit || !resiNumber.trim()}
+                    disabled={isShippingSubmit}
                     className={`flex-1 py-3 px-4 font-bold rounded-xl text-sm transition-all text-center uppercase tracking-wider ${
-                      isShippingSubmit || !resiNumber.trim()
+                      isShippingSubmit
                         ? 'bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-850'
                         : 'bg-cyan-600 hover:bg-cyan-500 text-white hover:shadow-[0_0_20px_rgba(6,182,212,0.4)]'
                     }`}
                   >
-                    {isShippingSubmit ? 'Menyimpan...' : 'Simpan Resi'}
+                    {isShippingSubmit ? 'Mengirim...' : 'Kirim Barang'}
                   </button>
                 </div>
               </form>

@@ -267,10 +267,10 @@ function MyOrders() {
                     </button>
                   )}
 
-                  {/* Lacak pengiriman jika shipment sudah dibuat (setelah pembayaran) */}
-                  {order.shipment?.tracking_number && (
+                  {/* Lacak pengiriman per-order (tampil setelah order lunas) */}
+                  {(order.status === 'paid' || order.status === 'success') && (
                     <Link
-                      to={`/track/${order.shipment.tracking_number}`}
+                      to={`/orders/${order.id}/tracking`}
                       className="border border-cyan-500/40 text-cyan-400 hover:bg-cyan-600 hover:text-white font-bold py-3 px-6 rounded-xl transition-all flex items-center justify-center gap-2"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

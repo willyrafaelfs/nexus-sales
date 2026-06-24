@@ -107,9 +107,15 @@ function App() {
 
         <Route path="/product/:id" element={<ProductDetail />} />
 
-        {/* Tracking pengiriman — publik */}
-        <Route path="/track" element={<Tracking />} />
-        <Route path="/track/:tracking" element={<Tracking />} />
+        {/* Tracking pengiriman per-order — wajib login & pemilik order */}
+        <Route
+          path="/orders/:orderId/tracking"
+          element={
+            <ProtectedCustomerRoute>
+              <Tracking />
+            </ProtectedCustomerRoute>
+          }
+        />
       </Routes>
     </BrowserRouter>
     </CartProvider>
