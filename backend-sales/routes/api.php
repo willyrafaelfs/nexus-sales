@@ -93,6 +93,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/seller/products', [ShopController::class, 'myProducts']);
     Route::post('/shop', [ShopController::class, 'store']);
     Route::post('/products', [ProductController::class, 'store']);
+    Route::put('/products/{id}', [ProductController::class, 'update']);
     Route::get('/seller/products/{id}', [ProductController::class, 'show']);
 
     // CRM — Super Admin & riwayat aktivitas customer

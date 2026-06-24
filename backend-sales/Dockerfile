@@ -1,9 +1,12 @@
 # Gunakan mesin PHP 8.3
 FROM php:8.3-cli
 
-# Install alat dasar dan "bahasa" PostgreSQL agar bisa terhubung ke Neon
-RUN apt-get update && apt-get install -y libpq-dev \
-    && docker-php-ext-install pdo pdo_pgsql pgsql
+# Install alat dasar dan "bahasa" PostgreSQL agar bisa terhubung ke Neon,
+# plus ekstensi Redis (phpredis) untuk koneksi queue ke Redis
+RUN apt-get update && apt-get install -y libpq-dev $PHPIZE_DEPS \
+    && docker-php-ext-install pdo pdo_pgsql pgsql \
+    && pecl install redis \
+    && docker-php-ext-enable redis
 
 # Atur ruang kerja di dalam kontainer
 WORKDIR /app

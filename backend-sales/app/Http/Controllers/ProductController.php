@@ -40,6 +40,53 @@ class ProductController extends Controller
         }
     }
 
+    // Update produk (termasuk stok). Foto opsional saat edit.
+    public function update(Request $request, $id)
+    {
+        $user = $request->user();
+        $product = Product::with('shop')->findOrFail($id);
+
+        // Ownership: hanya pemilik toko yang boleh mengedit produknya
+        if (!$product->shop || $product->shop->user_id !== $user->id) {
+            return response()->json(['message' => 'Anda tidak berhak mengubah produk ini.'], 403);
+        }
+
+        $request->validate([
+            'name' => 'required|string',
+            'price' => 'required|numeric',
+            'category' => 'required|string',
+            'description' => 'nullable|string',
+            'stock' => 'required|integer|min:0',
+            'foto_produk' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+        ]);
+
+        try {
+            $payload = [
+                'name' => $request->name,
+                'price' => $request->price,
+                'category' => $request->category,
+                'description' => $request->description,
+                'stock' => $request->stock,
+            ];
+
+            // Ganti foto hanya jika seller mengunggah yang baru
+            if ($request->hasFile('foto_produk')) {
+                $path = $request->file('foto_produk')->store('products', 's3');
+                $payload['image'] = Storage::disk('s3')->url($path);
+            }
+
+            $product->update($payload);
+
+            return response()->json([
+                'status' => 'Sukses!',
+                'message' => 'Produk berhasil diperbarui',
+                'product' => $product->refresh()
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Gagal memperbarui: ' . $e->getMessage()], 500);
+        }
+    }
+
     // Fungsi lama milikmu untuk upload barang
     public function store(Request $request)
     {

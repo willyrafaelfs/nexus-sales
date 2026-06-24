@@ -7,13 +7,17 @@ services:
     env_file: .env
     volumes:
       - .:/app
-  
+    depends_on:
+      - redis
+
   # server 2
   backend2:
     build: .
     env_file: .env
     volumes:
       - .:/app
+    depends_on:
+      - redis
 
   # server 3
   backend3:
@@ -21,6 +25,28 @@ services:
     env_file: .env
     volumes:
       - .:/app
+    depends_on:
+      - redis
+
+  # redis — broker untuk queue (job background)
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # queue worker — SATU instance saja, memproses job dari Redis.
+  # Pakai build/image & .env yang sama dengan backend.
+  queue-worker:
+    build: .
+    env_file: .env
+    restart: unless-stopped
+    volumes:
+      - .:/app
+    command: php artisan queue:work redis --tries=3 --backoff=5
+    depends_on:
+      - redis
 
   # traefik
   traefik:
@@ -72,3 +98,4 @@ services:
 
 volumes:
   minio_data:
+  redis_data:

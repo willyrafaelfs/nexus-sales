@@ -7,6 +7,7 @@ export default function SellerDashboard() {
   const [shopData, setShopData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview'); // overview, my-products, incoming-orders, add-product
+  const [editingProduct, setEditingProduct] = useState(null); // produk yang sedang diedit (null = mode tambah)
 
   // Data Analitik & Produk Khusus Toko
   const [metrics, setMetrics] = useState({ total_products: 0, total_revenue: 0 });
@@ -343,8 +344,8 @@ export default function SellerDashboard() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 19v-3" />
                     </svg>
                   </button>
-                  <button 
-                    onClick={() => setActiveTab('add-product')} 
+                  <button
+                    onClick={() => { setEditingProduct(null); setActiveTab('add-product'); }}
                     className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 transition-colors text-white font-bold rounded-xl text-xs uppercase tracking-wider shadow-lg"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
@@ -381,8 +382,8 @@ export default function SellerDashboard() {
                     <h3 className="text-xl font-bold text-white">Etalase Masih Kosong</h3>
                     <p className="text-gray-400 text-sm">Anda belum menambahkan produk apa pun untuk dijual di platform ini.</p>
                   </div>
-                  <button 
-                    onClick={() => setActiveTab('add-product')} 
+                  <button
+                    onClick={() => { setEditingProduct(null); setActiveTab('add-product'); }}
                     className="w-full py-3.5 bg-cyan-600 hover:bg-cyan-500 transition-colors text-white font-bold rounded-xl text-xs uppercase tracking-widest shadow-md"
                   >
                     Tambah Produk Pertama Saya
@@ -406,6 +407,9 @@ export default function SellerDashboard() {
                         <span className="absolute top-3 left-3 bg-cyan-950/80 border border-cyan-500/30 text-cyan-400 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md backdrop-blur-md">
                           {product.category}
                         </span>
+                        <span className={`absolute top-3 right-3 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md backdrop-blur-md border ${Number(product.stock) > 0 ? 'bg-emerald-950/80 border-emerald-500/30 text-emerald-400' : 'bg-red-950/80 border-red-500/40 text-red-400'}`}>
+                          Stok: {product.stock ?? 0}
+                        </span>
                       </div>
                       
                       <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
@@ -424,6 +428,14 @@ export default function SellerDashboard() {
                             Rp {Number(product.price).toLocaleString('id-ID')}
                           </span>
                         </div>
+
+                        <button
+                          onClick={() => { setEditingProduct(product); setActiveTab('add-product'); }}
+                          className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-gray-800 hover:bg-cyan-600 border border-gray-700 hover:border-cyan-500 text-gray-300 hover:text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-colors"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                          Edit Produk &amp; Stok
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -439,10 +451,22 @@ export default function SellerDashboard() {
             </div>
           )}
 
-          {/* TAB 4: ADD PRODUCT */}
+          {/* TAB 4: ADD / EDIT PRODUCT */}
           {activeTab === 'add-product' && (
             <div className="max-w-2xl mx-auto">
-              <ProductForm token={token} shopId={shopId} />
+              <ProductForm
+                key={editingProduct?.id || 'new'}
+                token={token}
+                shopId={shopId}
+                product={editingProduct}
+                onSaved={() => {
+                  fetchProducts();
+                  if (editingProduct) {
+                    setEditingProduct(null);
+                    setActiveTab('my-products');
+                  }
+                }}
+              />
             </div>
           )}
 

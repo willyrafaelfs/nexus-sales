@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 
 export default function AdminDashboard() {
   const [dashboardData, setDashboardData] = useState(null);
@@ -128,16 +129,28 @@ export default function AdminDashboard() {
             <p className="text-gray-400 text-sm mt-1 tracking-wide">Pusat kendali, performa bisnis, dan rekap transaksi platform.</p>
           </div>
           
-          <button 
-            onClick={fetchDashboardData}
-            disabled={isLoading}
-            className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 border border-gray-800 hover:border-cyan-500/50 hover:bg-gray-850 rounded-xl text-xs sm:text-sm font-semibold transition-all disabled:opacity-50 text-gray-300 hover:text-white"
-          >
-            <svg className={`w-4 h-4 ${isLoading ? 'animate-spin text-cyan-400' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 19v-3" />
-            </svg>
-            Segarkan Data
-          </button>
+          <div className="flex items-center gap-3">
+            <Link
+              to="/admin/crm"
+              className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 border border-cyan-500/30 hover:border-cyan-500/70 hover:bg-cyan-600 hover:text-white rounded-xl text-xs sm:text-sm font-semibold transition-all text-cyan-400"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+              CRM Logs
+            </Link>
+
+            <button
+              onClick={fetchDashboardData}
+              disabled={isLoading}
+              className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 border border-gray-800 hover:border-cyan-500/50 hover:bg-gray-850 rounded-xl text-xs sm:text-sm font-semibold transition-all disabled:opacity-50 text-gray-300 hover:text-white"
+            >
+              <svg className={`w-4 h-4 ${isLoading ? 'animate-spin text-cyan-400' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 19v-3" />
+              </svg>
+              Segarkan Data
+            </button>
+          </div>
         </div>
 
         {isLoading ? (

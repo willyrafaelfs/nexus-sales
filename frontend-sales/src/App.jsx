@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Shop from './pages/Shop';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminCrmLogs from './pages/AdminCrmLogs';
 import Login from './pages/Login';
 import SellerDashboard from './pages/seller/SellerDashboard';
 import CreateShop from './pages/seller/CreateShop';
@@ -56,13 +57,23 @@ function App() {
         <Route path="/login" element={<Login />} />
         
         {/* Rute Admin — hanya role admin */}
-        <Route 
-          path="/admin" 
+        <Route
+          path="/admin"
           element={
             <ProtectedAdminRoute>
               <AdminDashboard />
             </ProtectedAdminRoute>
-          } 
+          }
+        />
+
+        {/* CRM Activity Logs — hanya admin */}
+        <Route
+          path="/admin/crm"
+          element={
+            <ProtectedAdminRoute>
+              <AdminCrmLogs />
+            </ProtectedAdminRoute>
+          }
         />
 
         {/* Rute Seller Dashboard — hanya role seller */}
