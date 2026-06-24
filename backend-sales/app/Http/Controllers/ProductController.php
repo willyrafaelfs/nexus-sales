@@ -72,6 +72,11 @@ class ProductController extends Controller
             // Ganti foto hanya jika seller mengunggah yang baru
             if ($request->hasFile('foto_produk')) {
                 $path = $request->file('foto_produk')->store('products', 's3');
+                if (!$path) {
+                    return response()->json([
+                        'error' => 'Gagal mengunggah gambar ke storage (MinIO). Pastikan bucket sudah dibuat dan MinIO berjalan.'
+                    ], 502);
+                }
                 $payload['image'] = Storage::disk('s3')->url($path);
             }
 
@@ -102,8 +107,17 @@ class ProductController extends Controller
 
         try {
             $path = $request->file('foto_produk')->store('products', 's3');
+
+            // Disk s3 di-set throw=false → upload gagal mengembalikan false (tidak melempar).
+            // Cegah produk tersimpan dengan gambar rusak: tolak kalau upload gagal.
+            if (!$path) {
+                return response()->json([
+                    'error' => 'Gagal mengunggah gambar ke storage (MinIO). Pastikan bucket sudah dibuat (akses /api/setup-minio) dan MinIO berjalan.'
+                ], 502);
+            }
+
             $fullUrl = Storage::disk('s3')->url($path);
-            
+
             $product = Product::create([
                 'name' => $request->name,
                 'price' => $request->price,

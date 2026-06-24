@@ -1,8 +1,11 @@
-version: '3.8'
-
 # Compose ini berada di ROOT (Nexus Sales) dan mengorkestrasi seluruh sistem:
 # frontend + 3 node backend + redis + load balancer + traefik + minio.
 # Jalankan dari folder root:  docker compose up -d
+#
+# `name` dikunci agar nama project & volume (mis. nexussales_minio_data) tetap
+# sama walau folder/lokasi compose berpindah — mencegah volume MinIO/Redis
+# "berganti jadi kosong" karena project name ikut berubah.
+name: nexussales
 
 services:
   # server 1
