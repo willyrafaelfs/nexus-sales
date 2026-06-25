@@ -20,13 +20,10 @@ load balancer, plus Redis, MinIO, Traefik, dan PostgreSQL di Neon).
 
 | Keterangan | Isi |
 |---|---|
-| **Nama** | _(isi di sini)_ |
-| **NIM** | _(isi di sini)_ |
-| **Kelas** | _(isi di sini)_ |
-| **Program Studi** | _(isi di sini)_ |
+| **Nama** | Willy Rafael F. Silalahi |
+| **NIM** | 23083000168 |
+| **Kelas** | 6A2 |
 | **Mata Kuliah** | Sistem Integrasi |
-| **Dosen Pengampu** | _(isi di sini)_ |
-| **Institusi** | _(isi di sini)_ |
 
 ---
 
@@ -48,9 +45,6 @@ load balancer, plus Redis, MinIO, Traefik, dan PostgreSQL di Neon).
 - [Catatan Integrasi](#catatan-integrasi)
 - [Keamanan](#keamanan)
 - [Kredit dan Kontak](#kredit-dan-kontak)
-
-> Dokumen ini digenerate dari kode aktual (routes, migrations, config, docker-compose,
-> composer.json, package.json). Bagian yang tidak ditemukan di kode ditandai eksplisit.
 
 ---
 
@@ -117,15 +111,28 @@ Port diambil dari `docker-compose.yml`:
 
 ## Tech Stack
 
-**Backend** (`backend-sales/composer.json`): PHP `^8.3`, `laravel/framework ^13.0`,
-`laravel/sanctum ^4.0`, `laravel/socialite ^5.26`, `laravel/tinker ^3.0`,
-`league/flysystem-aws-s3-v3 3.0`, `midtrans/midtrans-php ^2.6`. Dijalankan sebagai
-**PHP-FPM 8.3 + OPcache** di balik Nginx (FastCGI load balancing ke 3 node).
+#### Backend
+* **Core**: PHP `^8.3` & Laravel Framework `^13.0`
+* **Authentication**: Laravel Sanctum `^4.0` & Laravel Socialite `^5.26`
+* **Utilities**: Laravel Tinker `^3.0` & Midtrans PHP SDK `^2.6`
+* **Storage**: League Flysystem AWS S3 V3 `^3.0`
+* **Runtime**: PHP-FPM 8.3 + OPcache
+* **Web Server**: Nginx (FastCGI load balancing ke 3 node)
+* **Config File**: `backend-sales/composer.json`
 
-**Frontend** (`frontend-sales/package.json`): `react ^19.2.4`, `react-dom ^19.2.4`,
-`react-router-dom ^7.14.0`, `vite ^8.0.4`, `tailwindcss ^4.2.2`.
+#### Frontend
+* **Core**: React `^19.2.4` & React DOM `^19.2.4`
+* **Routing**: React Router DOM `^7.14.0`
+* **Build Tool**: Vite `^8.0.4`
+* **Styling**: Tailwind CSS `^4.2.2`
+* **Config File**: `frontend-sales/package.json`
 
-**Infrastruktur**: Docker Compose, Nginx, Traefik v3.7, Redis, MinIO, PostgreSQL (Neon).
+#### Infrastructure & Databases
+* **Containerization**: Docker Compose
+* **Reverse Proxy**: Traefik v3.7 & Nginx
+* **Database**: PostgreSQL (Neon Serverless)
+* **Cache & Queue**: Redis
+* **Object Storage**: MinIO (S3 Compatible)
 
 ---
 
@@ -422,11 +429,8 @@ Dari `database/migrations/`:
 
 ## Kredit dan Kontak
 
-- **Nama**: `<nama lengkap>`
-- **GitHub**: `<https://github.com/username>`
-- **Email**: `<email@contoh.com>`
-- **LinkedIn** (opsional): `<url>`
+- **Nama**: `Willy Rafael F. Silalahi`
+- **GitHub**: [@willyrafaelfs](https://github.com/willyrafaelfs)
+- **Email**: [willy.rafaelfs@gmail.com](mailto:willy.rafaelfs@gmail.com)
 
-Proyek ini dibuat untuk keperluan akademik (tugas mata kuliah Sistem Integrasi).
-
-> Bagian di atas adalah placeholder — silakan lengkapi dengan datamu.
+>Proyek ini dibuat untuk keperluan akademik (tugas mata kuliah Sistem Integrasi).
