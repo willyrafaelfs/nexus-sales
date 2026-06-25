@@ -1,16 +1,60 @@
 # NEXUS SALES
 
+![Laravel](https://img.shields.io/badge/Laravel-13-FF2D20?logo=laravel&logoColor=white)
+![PHP](https://img.shields.io/badge/PHP-8.3-777BB4?logo=php&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-4169E1?logo=postgresql&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-Queue_&_Cache-DC382D?logo=redis&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
+![Nginx](https://img.shields.io/badge/Nginx-LB_/_FastCGI-009639?logo=nginx&logoColor=white)
+![MinIO](https://img.shields.io/badge/MinIO-S3_Storage-C72E49?logo=minio&logoColor=white)
+
 **NEXUS SALES** adalah platform **e-commerce multi-seller** — studi kasus mata kuliah
 **Sistem Integrasi**. Monorepo ini berisi API Laravel (`backend-sales/`) dan SPA React/Vite
 (`frontend-sales/`), diorkestrasi dengan Docker Compose (3 node backend di belakang Nginx
 load balancer, plus Redis, MinIO, Traefik, dan PostgreSQL di Neon).
+
+## Identitas
+
+| Keterangan | Isi |
+|---|---|
+| **Nama** | _(isi di sini)_ |
+| **NIM** | _(isi di sini)_ |
+| **Kelas** | _(isi di sini)_ |
+| **Program Studi** | _(isi di sini)_ |
+| **Mata Kuliah** | Sistem Integrasi |
+| **Dosen Pengampu** | _(isi di sini)_ |
+| **Institusi** | _(isi di sini)_ |
+
+---
+
+## Daftar Isi
+
+- [Fitur Utama](#fitur-utama)
+- [Arsitektur](#arsitektur)
+- [Tech Stack](#tech-stack)
+- [Struktur Folder](#struktur-folder)
+- [Prasyarat](#prasyarat)
+- [Instalasi dan Menjalankan](#instalasi-dan-menjalankan)
+- [Akun Demo](#akun-demo)
+- [Konfigurasi Environment](#konfigurasi-environment)
+- [Peran Pengguna (RBAC)](#peran-pengguna-rbac)
+- [Alur Transaksi](#alur-transaksi)
+- [Daftar Endpoint API](#daftar-endpoint-api)
+- [Skema Database](#skema-database)
+- [Pengujian (Postman)](#pengujian-postman)
+- [Catatan Integrasi](#catatan-integrasi)
+- [Keamanan](#keamanan)
+- [Kredit dan Kontak](#kredit-dan-kontak)
 
 > Dokumen ini digenerate dari kode aktual (routes, migrations, config, docker-compose,
 > composer.json, package.json). Bagian yang tidak ditemukan di kode ditandai eksplisit.
 
 ---
 
-## ✨ Fitur Utama
+## Fitur Utama
 
 - **Autentikasi**: Laravel Sanctum (Bearer token) + registrasi akun + **Login Google**
   (Laravel Socialite).
@@ -34,7 +78,7 @@ load balancer, plus Redis, MinIO, Traefik, dan PostgreSQL di Neon).
 
 ---
 
-## 🏗️ Arsitektur
+## Arsitektur
 
 ```
                 Browser
@@ -71,7 +115,7 @@ Port diambil dari `docker-compose.yml`:
 
 ---
 
-## 🧰 Tech Stack
+## Tech Stack
 
 **Backend** (`backend-sales/composer.json`): PHP `^8.3`, `laravel/framework ^13.0`,
 `laravel/sanctum ^4.0`, `laravel/socialite ^5.26`, `laravel/tinker ^3.0`,
@@ -85,7 +129,9 @@ Port diambil dari `docker-compose.yml`:
 
 ---
 
-## 📁 Struktur Folder (cerminan repo nyata)
+## Struktur Folder
+
+Cerminan isi repo nyata:
 
 ```
 Nexus Sales/
@@ -131,13 +177,15 @@ Nexus Sales/
 
 ---
 
-## ⚙️ Prasyarat
+## Prasyarat
 
 - Docker & Docker Compose
 - Akun **Neon** (PostgreSQL), kredensial **Midtrans** (sandbox), **Google OAuth**, dan
   **RajaOngkir** untuk mengisi `.env`.
 
-## 🚀 Instalasi & Menjalankan
+---
+
+## Instalasi dan Menjalankan
 
 ```bash
 # 1. Siapkan environment (lihat tabel variabel di bawah)
@@ -169,7 +217,22 @@ MinIO console `http://localhost:9001`, Traefik dashboard `http://localhost:8080`
 
 ---
 
-## 🔐 Konfigurasi Environment
+## Akun Demo
+
+Tersedia di `backend-sales/database/seeders/DatabaseSeeder.php` (opsional, jalankan
+`docker compose exec backend1 php artisan db:seed`):
+
+| Email | Password | Role |
+|---|---|---|
+| `admin@nexus.com` | `admin123` | admin |
+| `willy@nexus.com` | `willy123` | customer |
+| `rizky@nexus.com` | `satria123` | customer |
+
+> Kredensial demo lokal — ganti/jangan dipakai di lingkungan publik.
+
+---
+
+## Konfigurasi Environment
 
 Nama variabel diambil dari `backend-sales/.env.example` & `config/services.php`
 (**tanpa nilai asli**). Isi nilai hanya di `.env` lokal.
@@ -216,7 +279,7 @@ Nama variabel diambil dari `backend-sales/.env.example` & `config/services.php`
 
 ---
 
-## 👥 Peran Pengguna (RBAC)
+## Peran Pengguna (RBAC)
 
 Kolom `users.role` (default `customer`):
 
@@ -227,7 +290,7 @@ Kolom `users.role` (default `customer`):
 
 ---
 
-## 🔄 Alur Transaksi
+## Alur Transaksi
 
 1. Customer login → tambah produk ke keranjang → **checkout** (`POST /api/checkout`, wajib auth) →
    stok divalidasi → order `pending` dibuat → Snap token Midtrans dikembalikan.
@@ -242,7 +305,7 @@ Kolom `users.role` (default `customer`):
 
 ---
 
-## 🌐 Daftar Endpoint API
+## Daftar Endpoint API
 
 Semua route ada di `routes/api.php` (prefix `/api`). `routes/web.php` hanya `GET /` (welcome view).
 
@@ -288,7 +351,9 @@ Semua route ada di `routes/api.php` (prefix `/api`). `routes/web.php` hanya `GET
 
 ---
 
-## 🗄️ Skema Database (dari `database/migrations/`)
+## Skema Database
+
+Dari `database/migrations/`:
 
 | Tabel | Kolom kunci | Relasi / catatan |
 |---|---|---|
@@ -306,7 +371,7 @@ Semua route ada di `routes/api.php` (prefix `/api`). `routes/web.php` hanya `GET
 
 ---
 
-## 🧪 Pengujian (Postman)
+## Pengujian (Postman)
 
 1. **Register/Login** → simpan `token` dari respons, pakai sebagai `Authorization: Bearer <token>`.
 2. **Checkout tanpa token** → `POST /api/checkout` harus **401**; dengan token customer → order
@@ -329,7 +394,7 @@ Semua route ada di `routes/api.php` (prefix `/api`). `routes/web.php` hanya `GET
 
 ---
 
-## 📝 Catatan Integrasi
+## Catatan Integrasi
 
 - **Webhook Midtrans**: saat lokal, Midtrans tidak bisa menjangkau `localhost`. Gunakan tunnel
   (mis. ngrok) dan set Notification URL Midtrans ke `https://<tunnel>/api/midtrans/notification`.
@@ -342,7 +407,7 @@ Semua route ada di `routes/api.php` (prefix `/api`). `routes/web.php` hanya `GET
 
 ---
 
-## 🛡️ Keamanan
+## Keamanan
 
 - **Jangan commit `.env`** (backend & frontend) — sudah diabaikan via `.gitignore`. Hanya
   `*.env.example` (placeholder) yang di-track.
@@ -355,10 +420,13 @@ Semua route ada di `routes/api.php` (prefix `/api`). `routes/web.php` hanya `GET
 
 ---
 
-## 📄 Lisensi & Kredit
+## Kredit dan Kontak
 
-- **Nama**: `<nama mahasiswa>`
-- **NIM**: `<NIM>`
-- **Institusi / Mata Kuliah**: `<institusi>` — Sistem Integrasi
+- **Nama**: `<nama lengkap>`
+- **GitHub**: `<https://github.com/username>`
+- **Email**: `<email@contoh.com>`
+- **LinkedIn** (opsional): `<url>`
 
-> Bagian identitas di atas adalah placeholder — silakan lengkapi.
+Proyek ini dibuat untuk keperluan akademik (tugas mata kuliah Sistem Integrasi).
+
+> Bagian di atas adalah placeholder — silakan lengkapi dengan datamu.
