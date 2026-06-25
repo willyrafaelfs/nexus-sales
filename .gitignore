@@ -1,0 +1,29 @@
+# ===== NEXUS SALES — root .gitignore =====
+# Defense-in-depth di level monorepo (selain .gitignore bawaan tiap subfolder).
+
+# --- Secrets & env ---
+backend-sales/.env
+frontend-sales/.env
+.env
+*.env.local
+
+# --- Backend (Laravel) ---
+backend-sales/vendor/
+backend-sales/storage/*.key
+backend-sales/storage/logs/*
+backend-sales/storage/framework/cache/*
+backend-sales/storage/framework/sessions/*
+backend-sales/storage/framework/views/*
+backend-sales/bootstrap/cache/*.php
+
+# --- Frontend (React/Vite) ---
+frontend-sales/node_modules/
+frontend-sales/dist/
+frontend-sales/dist-ssr/
+
+# --- Umum ---
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
