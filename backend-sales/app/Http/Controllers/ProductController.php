@@ -26,8 +26,11 @@ class ProductController extends Controller
     {
         try {
             // Cache read panas ke Redis (TTL 60s). Hit kedua tidak menyentuh Neon sama sekali.
+            // PENTING: cache ARRAY biasa (->toArray()), BUKAN objek Eloquent Collection —
+            // objek ORM gagal di-unserialize dari Redis (jadi __PHP_Incomplete_Class →
+            // JSON-nya jadi object, bukan array, → frontend products.filter error).
             $products = Cache::store('redis')->remember(self::CATALOG_CACHE_KEY, 60, function () {
-                return Product::with('shop:id,nama_toko')->latest()->get();
+                return Product::with('shop:id,nama_toko')->latest()->get()->toArray();
             });
 
             return response()->json([
