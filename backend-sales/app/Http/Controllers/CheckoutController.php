@@ -59,8 +59,8 @@ class CheckoutController extends Controller
         }
 
         // 2. Konfigurasi Midtrans
-        Config::$serverKey = env('MIDTRANS_SERVER_KEY');
-        Config::$isProduction = env('MIDTRANS_IS_PRODUCTION', false);
+        Config::$serverKey = config('services.midtrans.server_key');
+        Config::$isProduction = config('services.midtrans.is_production', false);
         Config::$isSanitized = true;
         Config::$is3ds = true; 
 
@@ -84,7 +84,7 @@ class CheckoutController extends Controller
             $snapToken = Snap::getSnapToken($params);
 
             // 6. Buat URL Pembayaran Langsung (Tergantung mode Sandbox/Production)
-            $paymentUrl = env('MIDTRANS_IS_PRODUCTION', false) 
+            $paymentUrl = config('services.midtrans.is_production', false)
                 ? "https://app.midtrans.com/snap/v2/vtweb/" . $snapToken
                 : "https://app.sandbox.midtrans.com/snap/v2/vtweb/" . $snapToken;
 

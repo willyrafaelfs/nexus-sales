@@ -4,19 +4,31 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 use App\Models\Product;
 use App\Services\AuditService;
 
 class ProductController extends Controller
 {
+    // Key cache katalog (read panas) — disimpan di Redis dengan TTL pendek
+    private const CATALOG_CACHE_KEY = 'catalog:products';
+
     public function __construct(private AuditService $audit) {}
+
+    // Invalidasi cache katalog saat produk berubah
+    private function forgetCatalogCache(): void
+    {
+        Cache::store('redis')->forget(self::CATALOG_CACHE_KEY);
+    }
 
     // Fungsi baru untuk menarik daftar katalog ke halaman utama
     public function index()
     {
         try {
-            // Tarik data produk beserta nama toko penjualnya, urutkan dari yang terbaru
-            $products = Product::with('shop:id,nama_toko')->latest()->get();
+            // Cache read panas ke Redis (TTL 60s). Hit kedua tidak menyentuh Neon sama sekali.
+            $products = Cache::store('redis')->remember(self::CATALOG_CACHE_KEY, 60, function () {
+                return Product::with('shop:id,nama_toko')->latest()->get();
+            });
 
             return response()->json([
                 'status' => 'Sukses!',
@@ -84,6 +96,7 @@ class ProductController extends Controller
             }
 
             $product->update($payload);
+            $this->forgetCatalogCache();
 
             return response()->json([
                 'status' => 'Sukses!',
@@ -132,6 +145,7 @@ class ProductController extends Controller
             ]);
 
             $product->link_gambar = $fullUrl;
+            $this->forgetCatalogCache();
 
             return response()->json([
                 'status' => 'Sukses!',
@@ -158,6 +172,7 @@ class ProductController extends Controller
         // Soft delete: produk hilang dari katalog & dashboard, order_items lama tetap utuh.
         // File gambar di MinIO sengaja DIBIARKAN agar riwayat pesanan tetap menampilkannya.
         $product->delete();
+        $this->forgetCatalogCache();
 
         // Audit log
         $this->audit->record('product_deleted', [

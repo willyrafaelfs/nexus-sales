@@ -28,7 +28,7 @@ class MidtransWebhookController extends Controller
         $fraudStatus  = (string) $request->input('fraud_status');
 
         // 1. Validasi signature: sha512(order_id + status_code + gross_amount + server_key)
-        $serverKey = env('MIDTRANS_SERVER_KEY');
+        $serverKey = config('services.midtrans.server_key');
         $expected  = hash('sha512', $orderId . $statusCode . $grossAmount . $serverKey);
 
         if (!hash_equals($expected, $signatureKey)) {

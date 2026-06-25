@@ -68,13 +68,15 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
-  # load balancer
+  # load balancer — gateway FastCGI ke 3 node PHP-FPM
   loadbalancer:
     image: nginx:alpine
     ports:
       - "8888:80"
     volumes:
       - ./backend-sales/nginx.conf:/etc/nginx/nginx.conf
+      # Kode di-mount read-only agar root/try_files & SCRIPT_FILENAME resolve
+      - ./backend-sales:/app:ro
     depends_on:
       - backend1
       - backend2

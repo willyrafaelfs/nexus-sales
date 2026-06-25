@@ -14,7 +14,7 @@ class RajaOngkirController extends Controller
     private $originId = 256; 
 
     public function getProvinces() {
-        $response = Http::withHeaders(['key' => env('RAJAONGKIR_API_KEY')])
+        $response = Http::withHeaders(['key' => config('services.rajaongkir.key')])
                         ->get("{$this->baseUrl}/destination/province");
         
         $data = $response->json();
@@ -31,7 +31,7 @@ class RajaOngkirController extends Controller
     }
 
     public function getCities($provinceId) {
-        $response = Http::withHeaders(['key' => env('RAJAONGKIR_API_KEY')])
+        $response = Http::withHeaders(['key' => config('services.rajaongkir.key')])
                         ->get("{$this->baseUrl}/destination/city/{$provinceId}");
         
         $data = $response->json();
@@ -45,7 +45,7 @@ class RajaOngkirController extends Controller
 
     public function checkCost(Request $request) {
         // Komerce mewajibkan format pengiriman form-urlencoded (asForm)
-        $response = Http::withHeaders(['key' => env('RAJAONGKIR_API_KEY')])
+        $response = Http::withHeaders(['key' => config('services.rajaongkir.key')])
                         ->asForm() 
                         ->post("{$this->baseUrl}/calculate/domestic-cost", [
                             'origin' => $this->originId,
